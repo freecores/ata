@@ -1,7 +1,7 @@
 /////////////////////////////////////////////////////////////////////
 ////                                                             ////
-////  OCIDEC-1 ATA Controller                                    ////
-////  Main Controller                                            ////
+////  OCIDEC-1 ATA/ATAPI-5 Host Controller                       ////
+////  PIO Controller                                             ////
 ////                                                             ////
 ////  Author: Richard Herveille                                  ////
 ////          richard@asics.ws                                   ////
@@ -35,10 +35,10 @@
 
 //  CVS Log
 //
-//  $Id: atahost_controller.v,v 1.2 2002-02-16 10:42:17 rherveille Exp $
+//  $Id: atahost_controller.v,v 1.3 2002-02-18 14:25:43 rherveille Exp $
 //
-//  $Date: 2002-02-16 10:42:17 $
-//  $Revision: 1.2 $
+//  $Date: 2002-02-18 14:25:43 $
+//  $Revision: 1.3 $
 //  $Author: rherveille $
 //  $Locker:  $
 //  $State: Exp $
@@ -51,6 +51,11 @@
 //               rev.: 1.4  July  26th, 2001. Fixed non-blocking assignments.
 //
 //               $Log: not supported by cvs2svn $
+//               Revision 1.2  2002/02/16 10:42:17  rherveille
+//               Added disclaimer
+//               Added CVS information
+//               Changed core for new internal counter libraries (synthesis fixes).
+//
 //
 //
 
@@ -154,49 +159,48 @@ module atahost_controller (clk, nReset, rst, irq, IDEctrl_rst, IDEctrl_IDEen,
 
 	always@(posedge clk)
 	begin : synch_incoming
+		cIORDY <= #1 IORDY;
+		cINTRQ <= #1 INTRQ;
 
-		cIORDY <= IORDY;
-		cINTRQ <= INTRQ;
-
-		sIORDY <= cIORDY;
-		irq <= cINTRQ;
+		sIORDY <= #1 cIORDY;
+		irq    <= #1 cINTRQ;
 	end
 
 	// generate ATA signals
 	always@(posedge clk or negedge nReset)
 		if (~nReset)
 			begin
-				RESETn <= 1'b0;
-				DIORn  <= 1'b1;
-				DIOWn  <= 1'b1;
-				DA     <= 0;  // ????
-				CS0n	  <= 1'b1;
-				CS1n	  <= 1'b1;
-				DDo    <= 0;
-				DDoe   <= 1'b0;
+				RESETn <= #1 1'b0;
+				DIORn  <= #1 1'b1;
+				DIOWn  <= #1 1'b1;
+				DA     <= #1 0;
+				CS0n	  <= #1 1'b1;
+				CS1n	  <= #1 1'b1;
+				DDo    <= #1 0;
+				DDoe   <= #1 1'b0;
 			end
 		else if (rst)
 			begin
-				RESETn <= 1'b0;
-				DIORn  <= 1'b1;
-				DIOWn  <= 1'b1;
-				DA     <= 0;  // ????
-				CS0n	  <= 1'b1;
-				CS1n	  <= 1'b1;
-				DDo    <= 0;
-				DDoe   <= 1'b0;
+				RESETn <= #1 1'b0;
+				DIORn  <= #1 1'b1;
+				DIOWn  <= #1 1'b1;
+				DA     <= #1 0;
+				CS0n	  <= #1 1'b1;
+				CS1n	  <= #1 1'b1;
+				DDo    <= #1 0;
+				DDoe   <= #1 1'b0;
 			end
 		else
 			begin
-				RESETn <= !IDEctrl_rst;
-				DA     <= PIOa[2:0];
-				CS0n	  <= !( !PIOa[3] & PIOreq); // CS0 asserted when A(3) = '0'
-				CS1n	  <= !(  PIOa[3] & PIOreq); // CS1 asserted when A(3) = '1'
+				RESETn <= #1 !IDEctrl_rst;
+				DA     <= #1 PIOa[2:0];
+				CS0n   <= #1 !( !PIOa[3] & PIOreq); // CS0 asserted when A(3) = '0'
+				CS1n   <= #1 !(  PIOa[3] & PIOreq); // CS1 asserted when A(3) = '1'
 
-				DDo    <= PIOd;
-				DDoe   <= PIOoe;
-				DIORn  <= !PIOdior;
-				DIOWn  <= !PIOdiow;
+				DDo    <= #1 PIOd;
+				DDoe   <= #1 PIOoe;
+				DIORn  <= #1 !PIOdior;
+				DIOWn  <= #1 !PIOdiow;
 			end
 
 
@@ -208,13 +212,13 @@ module atahost_controller (clk, nReset, rst, irq, IDEctrl_rst, IDEctrl_IDEen,
 	// capture ATA data for PIO access
 	always@(posedge clk)
 		if (dstrb)
-			PIOq <= DDi;
+			PIOq <= #1 DDi;
 
 	// generate PIOgo signal
 	always@(posedge clk)
 	begin
-		dPIOreq <= PIOreq & !PIOack;
-		PIOgo <= (PIOreq & !dPIOreq) & IDEctrl_IDEen;
+		dPIOreq <= #1 PIOreq & !PIOack;
+		PIOgo   <= #1 (PIOreq & !dPIOreq) & IDEctrl_IDEen;
 	end
 
 	// set Timing signals
@@ -226,11 +230,26 @@ module atahost_controller (clk, nReset, rst, irq, IDEctrl_rst, IDEctrl_IDEen,
 
 	// hookup timing controller
 	atahost_pio_tctrl #(TWIDTH, PIO_mode0_T1, PIO_mode0_T2, PIO_mode0_T4, PIO_mode0_Teoc)
-		PIO_timing_controller (.clk(clk), .nReset(nReset), .rst(rst), .IORDY_en(IORDYen), .T1(T1), .T2(T2), .T4(T4), .Teoc(Teoc),
-			.go(PIOgo), .we(PIOwe), .oe(PIOoe), .done(PIOdone), .dstrb(dstrb), .DIOR(PIOdior), .DIOW(PIOdiow), .IORDY(sIORDY) );
+		PIO_timing_controller (
+			.clk(clk),
+			.nReset(nReset),
+			.rst(rst),
+			.IORDY_en(IORDYen),
+			.T1(T1),
+			.T2(T2),
+			.T4(T4),
+			.Teoc(Teoc),
+			.go(PIOgo),
+			.we(PIOwe),
+			.oe(PIOoe),
+			.done(PIOdone),
+			.dstrb(dstrb),
+			.DIOR(PIOdior),
+			.DIOW(PIOdiow),
+			.IORDY(sIORDY)
+		);
 
 	always@(posedge clk)
-		PIOack <= PIOdone | (PIOreq & !IDEctrl_IDEen); // acknowledge when done or when IDE not enabled (discard request)
+		PIOack <= #1 PIOdone | (PIOreq & !IDEctrl_IDEen); // acknowledge when done or when IDE not enabled (discard request)
 
 endmodule
-

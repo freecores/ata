@@ -1,7 +1,7 @@
 /////////////////////////////////////////////////////////////////////
 ////                                                             ////
-////  OCIDEC-1 ATA Controller                                    ////
-////  PIO Mode timing controller                                 ////
+////  OpenCores ATA/ATAPI-5 Host Controller                      ////
+////  PIO Timing Controller (common for all OCIDEC cores)        ////
 ////                                                             ////
 ////  Author: Richard Herveille                                  ////
 ////          richard@asics.ws                                   ////
@@ -35,10 +35,10 @@
 
 //  CVS Log
 //
-//  $Id: atahost_pio_tctrl.v,v 1.2 2002-02-16 10:42:17 rherveille Exp $
+//  $Id: atahost_pio_tctrl.v,v 1.3 2002-02-18 14:25:43 rherveille Exp $
 //
-//  $Date: 2002-02-16 10:42:17 $
-//  $Revision: 1.2 $
+//  $Date: 2002-02-18 14:25:43 $
+//  $Revision: 1.3 $
 //  $Author: rherveille $
 //  $Locker:  $
 //  $State: Exp $
@@ -49,6 +49,11 @@
 //               Rev. 1.2 July 11th, 2001. Changed 'igo' & 'hold_go' generation.
 //
 //               $Log: not supported by cvs2svn $
+//               Revision 1.2  2002/02/16 10:42:17  rherveille
+//               Added disclaimer
+//               Added CVS information
+//               Changed core for new internal counter libraries (synthesis fixes).
+//
 //
 
 
@@ -149,18 +154,18 @@ module atahost_pio_tctrl(clk, nReset, rst, IORDY_en, T1, T2, T4, Teoc, go, we, o
 	always@(posedge clk or negedge nReset)
 		if (~nReset)
 			begin
-				busy <= 1'b0;
-				hold_go <= 1'b0;
+				busy    <= #1 1'b0;
+				hold_go <= #1 1'b0;
 			end
 		else if (rst)
 			begin
-				busy <= 1'b0;
-				hold_go <= 1'b0;
+				busy    <= #1 1'b0;
+				hold_go <= #1 1'b0;
 			end
 		else
 			begin
-				busy <= (igo | busy) & !Teoc_done;
-				hold_go <= (go | (hold_go & busy)) & !igo;
+				busy    <= #1 (igo | busy) & !Teoc_done;
+				hold_go <= #1 (go | (hold_go & busy)) & !igo;
 			end
 
 	assign igo = (go | hold_go) & !busy;
@@ -182,21 +187,21 @@ module atahost_pio_tctrl(clk, nReset, rst, IORDY_en, T1, T2, T4, Teoc, go, we, o
 	always@(posedge clk or negedge nReset)
 		if (~nReset)
 			begin
-				DIOR <= 1'b0;
-				DIOW <= 1'b0;
-				oe   <= 1'b0;
+				DIOR <= #1 1'b0;
+				DIOW <= #1 1'b0;
+				oe   <= #1 1'b0;
 			end
 		else if (rst)
 			begin
-				DIOR <= 1'b0;
-				DIOW <= 1'b0;
-				oe   <= 1'b0;
+				DIOR <= #1 1'b0;
+				DIOW <= #1 1'b0;
+				oe   <= #1 1'b0;
 			end
 		else
 			begin
-				DIOR <= (!we & T1done) | (DIOR & !IORDY_done);
-				DIOW <= ( we & T1done) | (DIOW & !IORDY_done);
-				oe   <= ( (we & igo) | oe) & !T4done;           // negate oe when t4-done
+				DIOR <= #1 (!we & T1done) | (DIOR & !IORDY_done);
+				DIOW <= #1 ( we & T1done) | (DIOW & !IORDY_done);
+				oe   <= #1 ( (we & igo) | oe) & !T4done;           // negate oe when t4-done
 			end
 
 	// 3)	hookup T2 counter
@@ -216,17 +221,17 @@ module atahost_pio_tctrl(clk, nReset, rst, IORDY_en, T1, T2, T4, Teoc, go, we, o
 	// hold T2done
 	always@(posedge clk or negedge nReset)
 		if (~nReset)
-			hT2done <= 1'b0;
+			hT2done <= #1 1'b0;
 		else if (rst)
-			hT2done <= 1'b0;
+			hT2done <= #1 1'b0;
 		else
-				hT2done <= (T2done | hT2done) & !IORDY_done;
+			hT2done <= #1 (T2done | hT2done) & !IORDY_done;
 
 	assign IORDY_done = (T2done | hT2done) & (IORDY | !IORDY_en);
 
 	// generate datastrobe, capture data at rising DIOR- edge
 	always@(posedge clk)
-		dstrb <= IORDY_done;
+		dstrb <= #1 IORDY_done;
 
 	// hookup data hold counter
 	ro_cnt #(TWIDTH, 1'b0, PIO_MODE0_T4)

@@ -1,7 +1,7 @@
 /////////////////////////////////////////////////////////////////////
 ////                                                             ////
 ////  OCIDEC-1 ATA/ATAPI-5 Controller                            ////
-////  Main Controller                                            ////
+////  Top Level                                                 ////
 ////                                                             ////
 ////  Author: Richard Herveille                                  ////
 ////          richard@asics.ws                                   ////
@@ -35,10 +35,10 @@
 
 //  CVS Log
 //
-//  $Id: atahost_top.v,v 1.6 2002-02-16 10:42:17 rherveille Exp $
+//  $Id: atahost_top.v,v 1.7 2002-02-18 14:25:43 rherveille Exp $
 //
-//  $Date: 2002-02-16 10:42:17 $
-//  $Revision: 1.6 $
+//  $Date: 2002-02-18 14:25:43 $
+//  $Revision: 1.7 $
 //  $Author: rherveille $
 //  $Locker:  $
 //  $State: Exp $
@@ -53,6 +53,11 @@
 //               rev.: 1.6 October 15th, 2001. Removed ata_defines file. Changed define statement to parameter
 //
 //               $Log: not supported by cvs2svn $
+//               Revision 1.6  2002/02/16 10:42:17  rherveille
+//               Added disclaimer
+//               Added CVS information
+//               Changed core for new internal counter libraries (synthesis fixes).
+//
 //
 //
 //
@@ -136,27 +141,20 @@ module atahost_top (wb_clk_i, arst_i, wb_rst_i, wb_cyc_i, wb_stb_i, wb_ack_o, wb
 	parameter [3:0] DeviceId = 4'h1;
 	parameter [3:0] RevisionNo = 4'h0;
 
-	`define ATA_ATA_ADR wb_adr_i[6]
-	`define ATA_CTRL_REG 4'b0000
-	`define ATA_STAT_REG 4'b0001
-	`define ATA_PIO_CMD 4'b0010
-
 	//
 	// Variable declarations
 	//
 
 	// registers
 	wire        IDEctrl_IDEen, IDEctrl_rst;
-	reg  [ 7:0] PIO_cmdport_T1, PIO_cmdport_T2, PIO_cmdport_T4, PIO_cmdport_Teoc;
+	wire [ 7:0] PIO_cmdport_T1, PIO_cmdport_T2, PIO_cmdport_T4, PIO_cmdport_Teoc;
 	wire        PIO_cmdport_IORDYen;
-	reg  [31:0] CtrlReg; // control register
 
 	wire        PIOack;
 	wire [15:0] PIOq;
 
-	wire [31:0] stat;
-
 	wire irq; // ATA bus IRQ signal
+
 
 	/////////////////
 	// Module body //
@@ -166,100 +164,94 @@ module atahost_top (wb_clk_i, arst_i, wb_rst_i, wb_cyc_i, wb_stb_i, wb_ack_o, wb
 	// arst_signal is either a wire or a NOT-gate
 	wire arst_signal = arst_i ^ ARST_LVL;
 
-	// generate bus cycle / address decoder
-	wire w_acc  = &wb_sel_i[1:0];                        // word access
-	wire dw_acc = &wb_sel_i;                             // double word access
+	//
+	// hookup wishbone slave
+	//
+	atahost_wb_slave #(DeviceId, RevisionNo, PIO_mode0_T1, 
+			PIO_mode0_T2, PIO_mode0_T4, PIO_mode0_Teoc, 0, 0, 0)
+	u0 (
+		// WISHBONE SYSCON signals
+		.clk_i(wb_clk_i),
+		.arst_i(arst_signal),
+		.rst_i(wb_rst_i),
 
-	// bus error
-	wire berr = `ATA_ATA_ADR ? !w_acc : !dw_acc;
+		// WISHBONE SLAVE signals
+		.cyc_i(wb_cyc_i),
+		.stb_i(wb_stb_i),
+		.ack_o(wb_ack_o),
+		.rty_o(),
+		.err_o(wb_err_o),
+		.adr_i(wb_adr_i),
+		.dat_i(wb_dat_i),
+		.dat_o(wb_dat_o),
+		.sel_i(wb_sel_i),
+		.we_i(wb_we_i),
+		.inta_o(wb_inta_o),
 
-	// PIO accesses at least 16bit wide
-	wire PIOsel = wb_cyc_i & wb_stb_i & `ATA_ATA_ADR & w_acc;
+		// PIO control inputs
+		.PIOsel(PIOsel),
+			//	PIOtip is only asserted during a PIO transfer (No shit! ;)
+			//	Since it is impossible to read the status register and access the PIO registers at the same time
+			//	this bit is useless (besides using-up resources)
+		.PIOtip(1'b0),
+		.PIOack(PIOack),
+		.PIOq(PIOq),
+		.PIOpp_full(1'b0), // OCIDEC-1 does not support PIO-write pingpong, negate signal
+		.irq(irq),
 
-	// CON accesses only 32bit wide
-	wire CONsel = wb_cyc_i & wb_stb_i & !(`ATA_ATA_ADR) & dw_acc;
+		// DMA control inputs (negate all of them, OCIDEC-1 does not support DMA)
+		.DMAsel(),
+		.DMAtip(1'b0),
+		.DMAack(1'b0),
+		.DMARxEmpty(1'b0),
+		.DMATxFull(1'b0),
+		.DMA_dmarq(1'b0),
+		.DMAq(32'h0),
 
-	// generate registers
+		// outputs
+		// control register outputs
+		.IDEctrl_rst(IDEctrl_rst),
+		.IDEctrl_IDEen(IDEctrl_IDEen),
+		.IDEctrl_FATR0(),
+		.IDEctrl_FATR1(),
+		.IDEctrl_ppen(),
 
-	// generate register select signals
-	wire sel_ctrl        = CONsel & wb_we_i & (wb_adr_i == `ATA_CTRL_REG);
-	wire sel_stat        = CONsel & wb_we_i & (wb_adr_i == `ATA_STAT_REG);
-	wire sel_PIO_cmdport = CONsel & wb_we_i & (wb_adr_i == `ATA_PIO_CMD);
-	// reserved 0x03-0x0f --
+		.DMActrl_DMAen(),
+		.DMActrl_dir(),
+		.DMActrl_BeLeC0(),
+		.DMActrl_BeLeC1(),
 
-	// generate control register
-	always@(posedge wb_clk_i or negedge arst_signal)
-		if (~arst_signal)
-			begin
-				CtrlReg[31:1] <= 0;
-				CtrlReg[0] <= 1'b1; // set reset bit (ATA-RESETn line)
-			end
-		else if (wb_rst_i)
-			begin
-				CtrlReg[31:1] <= 0;
-				CtrlReg[0] <= 1'b1; // set reset bit (ATA-RESETn line)
-			end
-		else if (sel_ctrl)
-			CtrlReg <= wb_dat_i;
+		// CMD port timing registers
+		.PIO_cmdport_T1(PIO_cmdport_T1),
+		.PIO_cmdport_T2(PIO_cmdport_T2),
+		.PIO_cmdport_T4(PIO_cmdport_T4),
+		.PIO_cmdport_Teoc(PIO_cmdport_Teoc),
+		.PIO_cmdport_IORDYen(PIO_cmdport_IORDYen),
 
-	// assign bits
-	assign IDEctrl_IDEen       = CtrlReg[7];
-	assign PIO_cmdport_IORDYen = CtrlReg[1];
-	assign IDEctrl_rst         = CtrlReg[0];
+		// data-port0 timing registers
+		.PIO_dport0_T1(),
+		.PIO_dport0_T2(),
+		.PIO_dport0_T4(),
+		.PIO_dport0_Teoc(),
+		.PIO_dport0_IORDYen(),
 
+		// data-port1 timing registers
+		.PIO_dport1_T1(),
+		.PIO_dport1_T2(),
+		.PIO_dport1_T4(),
+		.PIO_dport1_Teoc(),
+		.PIO_dport1_IORDYen(),
 
-	// generate status register clearable bits
-	reg dirq, int;
-	
-	always@(posedge wb_clk_i or negedge arst_signal)
-		if (~arst_signal)
-			begin
-				int  <= 1'b0;
-				dirq <= 1'b0;
-			end
-		else if (wb_rst_i)
-			begin
-				int  <= 1'b0;
-				dirq <= 1'b0;
-			end
-		else
-			begin
-				int  <= (int | (irq & !dirq)) & !(sel_stat & !wb_dat_i[0]);
-				dirq <= irq;
-			end
+		// DMA device0 timing registers
+		.DMA_dev0_Tm(),
+		.DMA_dev0_Td(),
+		.DMA_dev0_Teoc(),
 
-	// assign status bits
-	assign stat[31:28] = DeviceId;   // set Device ID
-	assign stat[27:24] = RevisionNo; // set revision number
-	assign stat[23: 1] = 0;          // --clear unused bits-- 
-                                   // Although stat[7]=PIOtip this bit is zero, because it is impossible 
-                                   // to read the status register and access the PIO registers at the same time.
-	assign stat[0]     = int;
-
-
-	// generate PIO compatible / command-port timing register
-	always@(posedge wb_clk_i or negedge arst_signal)
-		if (~arst_signal)
-			begin
-				PIO_cmdport_T1   <= PIO_mode0_T1;
-				PIO_cmdport_T2   <= PIO_mode0_T2;
-				PIO_cmdport_T4   <= PIO_mode0_T4;
-				PIO_cmdport_Teoc <= PIO_mode0_Teoc;
-			end
-		else if (wb_rst_i)
-			begin
-				PIO_cmdport_T1   <= PIO_mode0_T1;
-				PIO_cmdport_T2   <= PIO_mode0_T2;
-				PIO_cmdport_T4   <= PIO_mode0_T4;
-				PIO_cmdport_Teoc <= PIO_mode0_Teoc;
-			end
-		else if(sel_PIO_cmdport)
-			begin
-				PIO_cmdport_T1   <= wb_dat_i[ 7: 0];
-				PIO_cmdport_T2   <= wb_dat_i[15: 8];
-				PIO_cmdport_T4   <= wb_dat_i[23:16];
-				PIO_cmdport_Teoc <= wb_dat_i[31:24];
-			end
+		// DMA device1 timing registers
+		.DMA_dev1_Tm(),
+		.DMA_dev1_Td(),
+		.DMA_dev1_Teoc()
+	);
 
 
 	//
@@ -297,34 +289,4 @@ module atahost_top (wb_clk_i, arst_i, wb_rst_i, wb_cyc_i, wb_stb_i, wb_ack_o, wb
 			.INTRQ(intrq_pad_i)
 		);
 
-	//
-	// generate WISHBONE interconnect signals
-	//
-	reg [31:0] Q;
-
-	// generate acknowledge signal
-	assign wb_ack_o = PIOack | CONsel;
-
-	// generate error signal
-	assign wb_err_o = wb_cyc_i & wb_stb_i & berr;
-
-	// generate interrupt signal
-	assign wb_inta_o = stat[0];
-	
-	// generate output multiplexor
-	always@(wb_adr_i or CtrlReg or stat or PIO_cmdport_T1 or PIO_cmdport_T2 or PIO_cmdport_T4 or PIO_cmdport_Teoc)
-		case (wb_adr_i[5:2]) // synopsis full_case parallel_case
-			4'b0000: Q = CtrlReg;
-			4'b0001: Q = stat;
-			4'b0010: Q = {PIO_cmdport_Teoc, PIO_cmdport_T4, PIO_cmdport_T2, PIO_cmdport_T1};
-			default: Q = 0;
-		endcase
-
-	// assign DAT_O output
-	assign wb_dat_o = `ATA_ATA_ADR ? {16'h0000, PIOq} : Q;
-
 endmodule
-
-
-
-

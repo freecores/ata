@@ -76,3 +76,10 @@ Author: Richard Herveille
 - Changed core for new counter libraries
 - Updated testbench
 -----------------------------
+
+-----------------------------
+Revision: 1.9
+Date: Februar 17th, 2002.
+Author: Richard Herveille
+- moved wishbone interface into 'atahost_wb_slave.v'
+-----------------------------
