@@ -4,7 +4,7 @@
 // author : Richard Herveille
 // Rev. 1.0 June 27th, 2001. Initial Verilog release
 // Rev. 1.1 July  2nd, 2001. Fixed incomplete port list and some Verilog related issues.
-//
+// Rev. 1.2 July 11th, 2001. Changed 'igo' & 'hold_go' generation.
 
 //
 ///////////////////////////
@@ -119,10 +119,10 @@ module PIO_tctrl(clk, nReset, rst, IORDY_en, T1, T2, T4, Teoc, go, we, oe, done,
 		else
 			begin
 				busy <= (igo | busy) & !Teoc_done;
-				hold_go <= go | (hold_go & busy);
+				hold_go <= (go | (hold_go & busy)) & !igo;
 			end
 
-	assign igo = hold_go & !busy;
+	assign igo = (go | hold_go) & !busy;
 
 	// 1)	hookup T1 counter
 	ro_cnt #(TWIDTH) t1_cnt(.clk(clk), .nReset(nReset), .rst(rst), .cnt_en(1'b1), .go(igo), .d(T1), .id(T1_m0), .done(T1done), .q());
@@ -175,6 +175,7 @@ module PIO_tctrl(clk, nReset, rst, IORDY_en, T1, T2, T4, Teoc, go, we, oe, done,
 	// 5)	hookup end_of_cycle counter
 	ro_cnt #(TWIDTH) eoc_cnt(.clk(clk), .nReset(nReset), .rst(rst), .cnt_en(1'b1), .go(IORDY_done), .d(Teoc), .id(Teoc_m0), .done(Teoc_done), .q());
 endmodule
+
 
 
 

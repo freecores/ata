@@ -6,7 +6,7 @@
 -- rev.: 1.0a april 12th, 2001. Removed references to records.vhd to make it compatible with freely available VHDL to Verilog converter tools
 -- rev.: 1.1  june  18th, 2001. Changed PIOack generation. Avoid asserting PIOack continuously when IDEen = '0'
 -- rev.: 1.2  june  26th, 2001. Changed dPIOreq generation. Core did not support wishbone burst accesses to ATA-device.
---
+-- rev.: 1.3  july  11th, 2001. Changed PIOreq & PIOack generation (made them synchronous). 
 --
 
 -- OCIDEC1 supports:	
@@ -211,11 +211,10 @@ begin
 	gen_PIOgo: process(clk)
 	begin
 		if (clk'event and clk = '1') then
---			dPIOreq <= PIOreq;
 			dPIOreq <= PIOreq and not PIOack;
+			PIOgo <= (PIOreq and not dPIOreq) and IDEctrl_IDEen;
 		end if;
 	end process gen_PIOgo;
-	PIOgo <= (PIOreq and not dPIOreq) and IDEctrl_IDEen;
 
 	-- set Timing signals
 	T1      <= PIO_cmdport_T1;
@@ -233,7 +232,11 @@ begin
 		port map (clk => clk, nReset => nReset, rst => rst, IORDY_en => IORDYen, T1 => T1, T2 => T2, T4 => T4, Teoc => Teoc, 
 			go => PIOgo, we => PIOwe, oe => PIOoe, done => PIOdone, dstrb => dstrb, DIOR => PIOdior, DIOW => PIOdiow, IORDY => sIORDY);
 
-	PIOack <= PIOdone or (PIOreq and not IDEctrl_IDEen); -- acknowledge when done or when IDE not enabled (discard request)
+	-- generate acknowledge
+	gen_ack: process(clk)
+	begin
+		if (clk'event and clk = '1') then
+			PIOack <= PIOdone or (PIOreq and not IDEctrl_IDEen); -- acknowledge when done or when IDE not enabled (discard request)
+		end if;
+	end process gen_ack;
 end architecture structural;
-
-

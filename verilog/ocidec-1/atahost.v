@@ -23,7 +23,7 @@
 
 `timescale 1ns / 10ps
 
-module ata (CLK_I, nReset, RST_I, CYC_I, STB_I, ACK_O, ERR_O, ADR_I, DAT_I, DAT_O, SEL_I, WE_I, INTA_O,
+module atahost (CLK_I, nReset, RST_I, CYC_I, STB_I, ACK_O, ERR_O, ADR_I, DAT_I, DAT_O, SEL_I, WE_I, INTA_O,
 		RESETn, DDi, DDo, DDoe, DA, CS0n, CS1n, DIORn, DIOWn, IORDY, INTRQ);
 	//
 	// Parameter declarations

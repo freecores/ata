@@ -38,3 +38,11 @@ Author: Richard Herveille
 - Change PIOack from "out" to "buffer" (controller.vhd + ata.vhd)
 -----------------------------
 
+-----------------------------
+Revision: 1.3
+Date: July 11th, 2001
+Author: Richard Herveille
+- renamed 'ata.vhd' to 'atahost.vhd'
+- Changed PIOreq & PIOack generation (controller.vhd); made them synchronous
+- Changed 'go' & 'igo' generation (pio_tctrl.vhdl).
+-----------------------------

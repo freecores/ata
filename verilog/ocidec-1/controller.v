@@ -4,8 +4,8 @@
 // author : Richard Herveille
 // rev.: 1.0  june  28th, 2001. Initial Verilog release
 // rev.: 1.1  July   3rd, 2001. Rewrote "IORDY" and "INTRQ" capture section.
-// rev.: 1.2  July   9th, 2001. Added "timescale". Undo "IORDY & INTRQ" rewrite.
-//
+// rev.: 1.2  July   9th, 2001. Added "timescale". Undid "IORDY & INTRQ" rewrite.
+// rev.: 1.3  july  11th, 2001. Changed PIOreq & PIOack generation (made them synchronous). 
 
 // OCIDEC1 supports:	
 // -Common Compatible timing access to all connected devices
@@ -55,6 +55,7 @@ module controller (clk, nReset, rst, irq, IDEctrl_rst, IDEctrl_IDEen,
 	input         PIOwe;  // PIO direction  bit. 1'b1==write, 1'b0==read
 
 	reg [15:0] PIOq;
+	reg PIOack;
 
 	// ATA signals
 	output        RESETn;
@@ -83,7 +84,7 @@ module controller (clk, nReset, rst, irq, IDEctrl_rst, IDEctrl_IDEen,
 	//
 
 	reg dPIOreq;
-	wire PIOgo;   // start PIO timing controller
+	reg PIOgo;   // start PIO timing controller
 	wire PIOdone; // PIO timing controller done
 
 	// PIO signals
@@ -169,9 +170,10 @@ module controller (clk, nReset, rst, irq, IDEctrl_rst, IDEctrl_IDEen,
 
 	// generate PIOgo signal
 	always@(posedge clk)
+	begin
 		dPIOreq <= PIOreq & !PIOack;
-
-	assign PIOgo = (PIOreq & !dPIOreq) & IDEctrl_IDEen;
+		PIOgo = (PIOreq & !dPIOreq) & IDEctrl_IDEen;
+	end
 
 	// set Timing signals
 	assign T1      = PIO_cmdport_T1;
@@ -185,8 +187,10 @@ module controller (clk, nReset, rst, irq, IDEctrl_rst, IDEctrl_IDEen,
 		PIO_timing_controller (.clk(clk), .nReset(nReset), .rst(rst), .IORDY_en(IORDYen), .T1(T1), .T2(T2), .T4(T4), .Teoc(Teoc),
 			.go(PIOgo), .we(PIOwe), .oe(PIOoe), .done(PIOdone), .dstrb(dstrb), .DIOR(PIOdior), .DIOW(PIOdiow), .IORDY(sIORDY) );
 
-	assign PIOack = PIOdone | (PIOreq & !IDEctrl_IDEen); // acknowledge when done or when IDE not enabled (discard request)
+	always@(posedge clk)
+		PIOack = PIOdone | (PIOreq & !IDEctrl_IDEen); // acknowledge when done or when IDE not enabled (discard request)
 endmodule
+
 
 
 

@@ -34,4 +34,7 @@ Revision: 1.3
 Date: July 11th, 2001
 Author: Richard Herveille
 - Fixed case sensitivity error (nRESET instead of nReset) in "controller" module declaration.
+- changed 'ata.v' into 'atahost.v'
+- Changed PIOreq & PIOack generation (controller.vhd); made them synchronous
+- Changed 'go' & 'igo' generation (pio_tctrl.vhdl).
 -----------------------------

@@ -6,6 +6,7 @@
 -- rev.: 1.0a april 12th, 2001 Removed references to records.vhd
 -- rev.: 1.1  june  18th, 2001. Changed PIOack generation. Avoid asserting PIOack continuously when IDEen = '0'
 -- rev.: 1.2  june  26th, 2001. Changed dPIOreq generation. Core did not support wishbone burst accesses to ATA-device.
+-- rev.: 1.3  july  11th, 2001. Changed PIOreq & PIOack generation (made them synchronous). 
 
 --
 -- OCIDEC2 supports:	
@@ -237,10 +238,9 @@ begin
 	begin
 		if (clk'event and clk = '1') then
 			dPIOreq <= PIOreq and not PIOack;
+			PIOgo <= (PIOreq and not dPIOreq) and IDEctrl_IDEen;
 		end if;
 	end process gen_PIOgo;
-	PIOgo <= (PIOreq and not dPIOreq) and IDEctrl_IDEen;
-
 	--
 	-- Hookup PIO access controller
 	--
@@ -250,5 +250,11 @@ begin
 			dport0_T1, dport0_T2, dport0_T4, dport0_Teoc, dport0_IORDYen, dport1_T1, dport1_T2, dport1_T4, dport1_Teoc, dport1_IORDYen, 
 			SelDev, PIOgo, PIOdone, PIOwe, PIOa, PIOq, DDi, PIOoe, PIOdior, PIOdiow, sIORDY);
 
-	PIOack <= PIOdone or (PIOreq and not IDEctrl_IDEen); -- acknowledge when done or when IDE not enabled (discard request)
+	-- generate acknowledge
+	gen_ack: process(clk)
+	begin
+		if (clk'event and clk = '1') then
+			PIOack <= PIOdone or (PIOreq and not IDEctrl_IDEen); -- acknowledge when done or when IDE not enabled (discard request)
+		end if;
+	end process gen_ack;
 end architecture structural;
