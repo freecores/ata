@@ -38,3 +38,10 @@ Author: Richard Herveille
 - Changed PIOreq & PIOack generation (controller.vhd); made them synchronous
 - Changed 'go' & 'igo' generation (pio_tctrl.vhdl).
 -----------------------------
+
+-----------------------------
+Revision: 1.4
+Date: July 26th, 2001
+Author: Richard Herveille
+- Fixed some blocking versus non-blocking statement issues.
+-----------------------------

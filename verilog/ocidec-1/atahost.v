@@ -6,6 +6,7 @@
 // rev.: 1.1  July  3rd, 2001. Changed 'ADR_I[5:2]' into 'ADR_I' on output multiplexor sensitivity list.
 // rev.: 1.2  July  9th, 2001. Fixed register control; registers latched data on all edge cycles instead when selected.
 // rev.: 1.3  July 11th, 2001. Fixed case sensitivity error (nRESET instead of nReset) in "controller" module declaration.
+// rev.: 1.4  July 26th, 2001. Fixed non-blocking assignments.
 
 // DeviceType: OCIDEC-1: OpenCores IDE Controller type1
 // Features: PIO Compatible Timing
@@ -175,24 +176,24 @@ module atahost (CLK_I, nReset, RST_I, CYC_I, STB_I, ACK_O, ERR_O, ADR_I, DAT_I, 
 	always@(posedge CLK_I or negedge nReset)
 		if (~nReset)
 			begin
-				PIO_cmdport_T1   = PIO_mode0_T1;
-				PIO_cmdport_T2   = PIO_mode0_T2;
-				PIO_cmdport_T4   = PIO_mode0_T4;
-				PIO_cmdport_Teoc = PIO_mode0_Teoc;
+				PIO_cmdport_T1   <= PIO_mode0_T1;
+				PIO_cmdport_T2   <= PIO_mode0_T2;
+				PIO_cmdport_T4   <= PIO_mode0_T4;
+				PIO_cmdport_Teoc <= PIO_mode0_Teoc;
 			end
 		else if (RST_I)
 			begin
-				PIO_cmdport_T1   = PIO_mode0_T1;
-				PIO_cmdport_T2   = PIO_mode0_T2;
-				PIO_cmdport_T4   = PIO_mode0_T4;
-				PIO_cmdport_Teoc = PIO_mode0_Teoc;
+				PIO_cmdport_T1   <= PIO_mode0_T1;
+				PIO_cmdport_T2   <= PIO_mode0_T2;
+				PIO_cmdport_T4   <= PIO_mode0_T4;
+				PIO_cmdport_Teoc <= PIO_mode0_Teoc;
 			end
 		else if(sel_PIO_cmdport)
 			begin
-				PIO_cmdport_T1   = DAT_I[ 7: 0];
-				PIO_cmdport_T2   = DAT_I[15: 8];
-				PIO_cmdport_T4   = DAT_I[23:16];
-				PIO_cmdport_Teoc = DAT_I[31:24];
+				PIO_cmdport_T1   <= DAT_I[ 7: 0];
+				PIO_cmdport_T2   <= DAT_I[15: 8];
+				PIO_cmdport_T4   <= DAT_I[23:16];
+				PIO_cmdport_Teoc <= DAT_I[31:24];
 			end
 
 
@@ -229,3 +230,5 @@ module atahost (CLK_I, nReset, RST_I, CYC_I, STB_I, ACK_O, ERR_O, ADR_I, DAT_I, 
 	// assign DAT_O output
 	assign DAT_O = ADR_I[6] ? {16'h0000, PIOq} : Q;
 endmodule
+
+
