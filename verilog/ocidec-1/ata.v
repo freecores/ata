@@ -4,7 +4,7 @@
 // Author:		Richard Herveille
 // rev.: 1.0  June 29th, 2001. Initial Verilog release
 // rev.: 1.1  July  3rd, 2001. Changed 'ADR_I[5:2]' into 'ADR_I' on output multiplexor sensitivity list.
-//
+// rev.: 1.2  July  9th, 2001. Fixed register control; registers latched data on all edge cycles instead when selected.
 
 // DeviceType: OCIDEC-1: OpenCores IDE Controller type1
 // Features: PIO Compatible Timing
@@ -20,8 +20,9 @@
 // CS0-		select command block registers
 // CS1-		select control block registers
 
+`timescale 1ns / 10ps
 
-module atahost (CLK_I, nReset, RST_I, CYC_I, STB_I, ACK_O, ERR_O, ADR_I, DAT_I, DAT_O, SEL_I, WE_I, INTA_O,
+module ata (CLK_I, nReset, RST_I, CYC_I, STB_I, ACK_O, ERR_O, ADR_I, DAT_I, DAT_O, SEL_I, WE_I, INTA_O,
 		RESETn, DDi, DDo, DDoe, DA, CS0n, CS1n, DIORn, DIOWn, IORDY, INTRQ);
 	//
 	// Parameter declarations
@@ -131,7 +132,7 @@ module atahost (CLK_I, nReset, RST_I, CYC_I, STB_I, ACK_O, ERR_O, ADR_I, DAT_I, 
 				CtrlReg[31:1] <= 0;
 				CtrlReg[0] <= 1'b1; // set reset bit (ATA-RESETn line)
 			end
-		else
+		else if (sel_ctrl)
 			CtrlReg <= DAT_I;
 
 	// assign bits
@@ -185,7 +186,7 @@ module atahost (CLK_I, nReset, RST_I, CYC_I, STB_I, ACK_O, ERR_O, ADR_I, DAT_I, 
 				PIO_cmdport_T4   = PIO_mode0_T4;
 				PIO_cmdport_Teoc = PIO_mode0_Teoc;
 			end
-		else
+		else if(sel_PIO_cmdport)
 			begin
 				PIO_cmdport_T1   = DAT_I[ 7: 0];
 				PIO_cmdport_T2   = DAT_I[15: 8];
@@ -227,4 +228,3 @@ module atahost (CLK_I, nReset, RST_I, CYC_I, STB_I, ACK_O, ERR_O, ADR_I, DAT_I, 
 	// assign DAT_O output
 	assign DAT_O = ADR_I[6] ? {16'h0000, PIOq} : Q;
 endmodule
-

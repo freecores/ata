@@ -5,6 +5,7 @@
 // Rev. 1.0 June 27th, 2001. Initial Verilog release
 // Rev. 1.1 July  2nd, 2001. Fixed incomplete port list.
 //
+`timescale 1ns / 10ps
 
 
 /////////////////////////////
@@ -100,4 +101,5 @@ module ro_cnt (clk, nReset, rst, cnt_en, go, done, d, q, id);
 	// assign outputs
 	assign done = rco;
 endmodule
+
 

@@ -4,11 +4,13 @@
 // author : Richard Herveille
 // rev.: 1.0  june  28th, 2001. Initial Verilog release
 // rev.: 1.1  July   3rd, 2001. Rewrote "IORDY" and "INTRQ" capture section.
+// rev.: 1.2  July   9th, 2001. Added "timescale". Undo "IORDY & INTRQ" rewrite.
 //
 
 // OCIDEC1 supports:	
 // -Common Compatible timing access to all connected devices
 //
+`timescale 1ns / 10ps
 
 module controller (clk, nReset, rst, irq, IDEctrl_rst, IDEctrl_IDEen, 
 			PIO_cmdport_T1, PIO_cmdport_T2, PIO_cmdport_T4, PIO_cmdport_Teoc, PIO_cmdport_IORDYen, 
@@ -102,11 +104,12 @@ module controller (clk, nReset, rst, irq, IDEctrl_rst, IDEctrl_IDEen,
 
 
 	// synchronize incoming signals
-	always@(posedge clk)
-	begin
+	always
+	begin : synch_incoming
 		reg cIORDY;                               // capture IORDY
 		reg cINTRQ;                               // capture INTRQ
 		
+		@(posedge clk)
 		begin	
 			cIORDY <= IORDY;
 			cINTRQ <= INTRQ;
@@ -184,4 +187,6 @@ module controller (clk, nReset, rst, irq, IDEctrl_rst, IDEctrl_IDEen,
 
 	assign PIOack = PIOdone | (PIOreq & !IDEctrl_IDEen); // acknowledge when done or when IDE not enabled (discard request)
 endmodule
+
+
 
