@@ -1,19 +1,69 @@
-//
-// Project:		AT Atachement interface
-// ATA-3 rev7B compliant
-// Author:		Richard Herveille
-// rev.: 1.0    June 29th, 2001. Initial Verilog release
-// rev.: 1.1    July  3rd, 2001. Changed 'ADR_I[5:2]' into 'ADR_I' on output multiplexor sensitivity list.
-// rev.: 1.2    July  9th, 2001. Fixed register control; registers latched data on all edge cycles instead when selected.
-// rev.: 1.3    July 11th, 2001. Fixed case sensitivity error (nRESET instead of nReset) in "controller" module declaration.
-// rev.: 1.4    July 26th, 2001. Fixed non-blocking assignments.
-// rev.: 1.5  August 15th, 2001. Changed port-names to conform to new OpenCores naming-convention.
-// rev.: 1.6 October 15th, 2001. Removed ata_defines file. Changed define statement to parameter
+/////////////////////////////////////////////////////////////////////
+////                                                             ////
+////  OCIDEC-1 ATA/ATAPI-5 Controller                            ////
+////  Main Controller                                            ////
+////                                                             ////
+////  Author: Richard Herveille                                  ////
+////          richard@asics.ws                                   ////
+////          www.asics.ws                                       ////
+////                                                             ////
+/////////////////////////////////////////////////////////////////////
+////                                                             ////
+//// Copyright (C) 2001, 2002 Richard Herveille                  ////
+////                          richard@asics.ws                   ////
+////                                                             ////
+//// This source file may be used and distributed without        ////
+//// restriction provided that this copyright statement is not   ////
+//// removed from the file and that any derivative work contains ////
+//// the original copyright notice and the associated disclaimer.////
+////                                                             ////
+////     THIS SOFTWARE IS PROVIDED ``AS IS'' AND WITHOUT ANY     ////
+//// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED   ////
+//// TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS   ////
+//// FOR A PARTICULAR PURPOSE. IN NO EVENT SHALL THE AUTHOR      ////
+//// OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,         ////
+//// INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES    ////
+//// (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE   ////
+//// GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR        ////
+//// BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF  ////
+//// LIABILITY, WHETHER IN  CONTRACT, STRICT LIABILITY, OR TORT  ////
+//// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT  ////
+//// OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE         ////
+//// POSSIBILITY OF SUCH DAMAGE.                                 ////
+////                                                             ////
+/////////////////////////////////////////////////////////////////////
 
+//  CVS Log
+//
+//  $Id: atahost_top.v,v 1.6 2002-02-16 10:42:17 rherveille Exp $
+//
+//  $Date: 2002-02-16 10:42:17 $
+//  $Revision: 1.6 $
+//  $Author: rherveille $
+//  $Locker:  $
+//  $State: Exp $
+//
+// Change History:
+//               rev.: 1.0    June 29th, 2001. Initial Verilog release
+//               rev.: 1.1    July  3rd, 2001. Changed 'ADR_I[5:2]' into 'ADR_I' on output multiplexor sensitivity list.
+//               rev.: 1.2    July  9th, 2001. Fixed register control; registers latched data on all edge cycles instead when selected.
+//               rev.: 1.3    July 11th, 2001. Fixed case sensitivity error (nRESET instead of nReset) in "controller" module declaration.
+//               rev.: 1.4    July 26th, 2001. Fixed non-blocking assignments.
+//               rev.: 1.5  August 15th, 2001. Changed port-names to conform to new OpenCores naming-convention.
+//               rev.: 1.6 October 15th, 2001. Removed ata_defines file. Changed define statement to parameter
+//
+//               $Log: not supported by cvs2svn $
+//
+//
+//
+
+/////////////////////////////////////////////////////////////
+//
 // DeviceType: OCIDEC-1: OpenCores IDE Controller type1
 // Features: PIO Compatible Timing
 // DeviceID: 0x01
 // RevNo : 0x00
+//
 
 //
 // Host signals:
@@ -274,6 +324,7 @@ module atahost_top (wb_clk_i, arst_i, wb_rst_i, wb_cyc_i, wb_stb_i, wb_ack_o, wb
 	assign wb_dat_o = `ATA_ATA_ADR ? {16'h0000, PIOq} : Q;
 
 endmodule
+
 
 
 

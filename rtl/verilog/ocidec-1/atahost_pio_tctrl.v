@@ -1,16 +1,56 @@
-//
-// file: pio_tctrl.v
-//	description: PIO mode timing controller for ATA controller
-// author : Richard Herveille
-// Rev. 1.0 June 27th, 2001. Initial Verilog release
-// Rev. 1.1 July  2nd, 2001. Fixed incomplete port list and some Verilog related issues.
-// Rev. 1.2 July 11th, 2001. Changed 'igo' & 'hold_go' generation.
+/////////////////////////////////////////////////////////////////////
+////                                                             ////
+////  OCIDEC-1 ATA Controller                                    ////
+////  PIO Mode timing controller                                 ////
+////                                                             ////
+////  Author: Richard Herveille                                  ////
+////          richard@asics.ws                                   ////
+////          www.asics.ws                                       ////
+////                                                             ////
+/////////////////////////////////////////////////////////////////////
+////                                                             ////
+//// Copyright (C) 2001, 2002 Richard Herveille                  ////
+////                          richard@asics.ws                   ////
+////                                                             ////
+//// This source file may be used and distributed without        ////
+//// restriction provided that this copyright statement is not   ////
+//// removed from the file and that any derivative work contains ////
+//// the original copyright notice and the associated disclaimer.////
+////                                                             ////
+////     THIS SOFTWARE IS PROVIDED ``AS IS'' AND WITHOUT ANY     ////
+//// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED   ////
+//// TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS   ////
+//// FOR A PARTICULAR PURPOSE. IN NO EVENT SHALL THE AUTHOR      ////
+//// OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,         ////
+//// INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES    ////
+//// (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE   ////
+//// GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR        ////
+//// BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF  ////
+//// LIABILITY, WHETHER IN  CONTRACT, STRICT LIABILITY, OR TORT  ////
+//// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT  ////
+//// OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE         ////
+//// POSSIBILITY OF SUCH DAMAGE.                                 ////
+////                                                             ////
+/////////////////////////////////////////////////////////////////////
 
+//  CVS Log
 //
-///////////////////////////
-// PIO Timing controller //
-///////////////////////////
+//  $Id: atahost_pio_tctrl.v,v 1.2 2002-02-16 10:42:17 rherveille Exp $
 //
+//  $Date: 2002-02-16 10:42:17 $
+//  $Revision: 1.2 $
+//  $Author: rherveille $
+//  $Locker:  $
+//  $State: Exp $
+//
+// Change History:
+//               Rev. 1.0 June 27th, 2001. Initial Verilog release
+//               Rev. 1.1 July  2nd, 2001. Fixed incomplete port list and some Verilog related issues.
+//               Rev. 1.2 July 11th, 2001. Changed 'igo' & 'hold_go' generation.
+//
+//               $Log: not supported by cvs2svn $
+//
+
 
 //
 // Timing	PIO mode transfers
@@ -126,7 +166,17 @@ module atahost_pio_tctrl(clk, nReset, rst, IORDY_en, T1, T2, T4, Teoc, go, we, o
 	assign igo = (go | hold_go) & !busy;
 
 	// 1)	hookup T1 counter
-	ro_cnt #(TWIDTH) t1_cnt(.clk(clk), .nReset(nReset), .rst(rst), .cnt_en(1'b1), .go(igo), .d(T1), .id(T1_m0), .done(T1done), .q());
+	ro_cnt #(TWIDTH, 1'b0, PIO_MODE0_T1)
+		t1_cnt(
+			.clk(clk),
+			.rst(rst),
+			.nReset(nReset),
+			.cnt_en(1'b1),
+			.go(igo),
+			.d(T1),
+			.q(),
+			.done(T1done)
+		);
 
 	// 2)	set (and reset) DIOR-/DIOW-, set output-enable when writing to device
 	always@(posedge clk or negedge nReset)
@@ -150,7 +200,17 @@ module atahost_pio_tctrl(clk, nReset, rst, IORDY_en, T1, T2, T4, Teoc, go, we, o
 			end
 
 	// 3)	hookup T2 counter
-	ro_cnt #(TWIDTH) t2_cnt(.clk(clk), .nReset(nReset), .rst(rst), .cnt_en(1'b1), .go(T1done), .d(T2), .id(T2_m0), .done(T2done), .q());
+	ro_cnt #(TWIDTH, 1'b0, PIO_MODE0_T2)
+		t2_cnt(
+			.clk(clk),
+			.rst(rst),
+			.nReset(nReset),
+			.cnt_en(1'b1),
+			.go(T1done),
+			.d(T2),
+			.q(),
+			.done(T2done)
+		);
 
 	// 4)	check IORDY (if used), generate release_DIOR-/DIOW- signal (ie negate DIOR-/DIOW-)
 	// hold T2done
@@ -169,11 +229,32 @@ module atahost_pio_tctrl(clk, nReset, rst, IORDY_en, T1, T2, T4, Teoc, go, we, o
 		dstrb <= IORDY_done;
 
 	// hookup data hold counter
-	ro_cnt #(TWIDTH) dhold_cnt(.clk(clk), .nReset(nReset), .rst(rst), .cnt_en(1'b1), .go(IORDY_done), .d(T4), .id(T4_m0), .done(T4done), .q());
+	ro_cnt #(TWIDTH, 1'b0, PIO_MODE0_T4)
+		dhold_cnt(
+			.clk(clk),
+			.rst(rst),
+			.nReset(nReset),
+			.cnt_en(1'b1),
+			.go(IORDY_done),
+			.d(T4),
+			.q(),
+			.done(T4done)
+		);
+
 	assign done = T4done; // placing done here provides the fastest return possible, 
                         // while still guaranteeing data and address hold-times
 
 	// 5)	hookup end_of_cycle counter
-	ro_cnt #(TWIDTH) eoc_cnt(.clk(clk), .nReset(nReset), .rst(rst), .cnt_en(1'b1), .go(IORDY_done), .d(Teoc), .id(Teoc_m0), .done(Teoc_done), .q());
+	ro_cnt #(TWIDTH, 1'b0, PIO_MODE0_Teoc)
+		eoc_cnt(
+			.clk(clk),
+			.rst(rst),
+			.nReset(nReset),
+			.cnt_en(1'b1),
+			.go(IORDY_done),
+			.d(Teoc),
+			.q(),
+			.done(Teoc_done)
+		);
 
 endmodule

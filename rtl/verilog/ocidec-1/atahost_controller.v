@@ -1,15 +1,57 @@
-//
-// file: controller.v
-//	description: OCIDEC1 OpenCores IDE controller type-1
-// author : Richard Herveille
-// rev.: 1.0  june  28th, 2001. Initial Verilog release
-// rev.: 1.1  July   3rd, 2001. Rewrote "IORDY" and "INTRQ" capture section.
-// rev.: 1.2  July   9th, 2001. Added "timescale". Undid "IORDY & INTRQ" rewrite.
-// rev.: 1.3  July  11th, 2001. Changed PIOreq & PIOack generation (made them synchronous). 
-// rev.: 1.4  July  26th, 2001. Fixed non-blocking assignments.
+/////////////////////////////////////////////////////////////////////
+////                                                             ////
+////  OCIDEC-1 ATA Controller                                    ////
+////  Main Controller                                            ////
+////                                                             ////
+////  Author: Richard Herveille                                  ////
+////          richard@asics.ws                                   ////
+////          www.asics.ws                                       ////
+////                                                             ////
+/////////////////////////////////////////////////////////////////////
+////                                                             ////
+//// Copyright (C) 2001, 2002 Richard Herveille                  ////
+////                          richard@asics.ws                   ////
+////                                                             ////
+//// This source file may be used and distributed without        ////
+//// restriction provided that this copyright statement is not   ////
+//// removed from the file and that any derivative work contains ////
+//// the original copyright notice and the associated disclaimer.////
+////                                                             ////
+////     THIS SOFTWARE IS PROVIDED ``AS IS'' AND WITHOUT ANY     ////
+//// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED   ////
+//// TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS   ////
+//// FOR A PARTICULAR PURPOSE. IN NO EVENT SHALL THE AUTHOR      ////
+//// OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,         ////
+//// INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES    ////
+//// (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE   ////
+//// GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR        ////
+//// BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF  ////
+//// LIABILITY, WHETHER IN  CONTRACT, STRICT LIABILITY, OR TORT  ////
+//// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT  ////
+//// OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE         ////
+//// POSSIBILITY OF SUCH DAMAGE.                                 ////
+////                                                             ////
+/////////////////////////////////////////////////////////////////////
 
-// OCIDEC1 supports:	
-// -Common Compatible timing access to all connected devices
+//  CVS Log
+//
+//  $Id: atahost_controller.v,v 1.2 2002-02-16 10:42:17 rherveille Exp $
+//
+//  $Date: 2002-02-16 10:42:17 $
+//  $Revision: 1.2 $
+//  $Author: rherveille $
+//  $Locker:  $
+//  $State: Exp $
+//
+// Change History:
+//               rev.: 1.0  june  28th, 2001. Initial Verilog release
+//               rev.: 1.1  July   3rd, 2001. Rewrote "IORDY" and "INTRQ" capture section.
+//               rev.: 1.2  July   9th, 2001. Added "timescale". Undid "IORDY & INTRQ" rewrite.
+//               rev.: 1.3  July  11th, 2001. Changed PIOreq & PIOack generation (made them synchronous). 
+//               rev.: 1.4  July  26th, 2001. Fixed non-blocking assignments.
+//
+//               $Log: not supported by cvs2svn $
+//
 //
 
 `include "timescale.v"
@@ -191,3 +233,4 @@ module atahost_controller (clk, nReset, rst, irq, IDEctrl_rst, IDEctrl_IDEen,
 		PIOack <= PIOdone | (PIOreq & !IDEctrl_IDEen); // acknowledge when done or when IDE not enabled (discard request)
 
 endmodule
+
