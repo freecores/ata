@@ -45,3 +45,11 @@ Date: July 26th, 2001
 Author: Richard Herveille
 - Fixed some blocking versus non-blocking statement issues.
 -----------------------------
+
+-----------------------------
+Revision: 1.5
+Date: August 15th, 2001.
+Author: Richard Herveille
+- Changed filenames and top-level port names to be conform new OpenCores conventions
+-----------------------------
+

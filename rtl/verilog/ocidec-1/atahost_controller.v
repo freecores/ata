@@ -11,9 +11,10 @@
 // OCIDEC1 supports:	
 // -Common Compatible timing access to all connected devices
 //
-`timescale 1ns / 10ps
 
-module controller (clk, nReset, rst, irq, IDEctrl_rst, IDEctrl_IDEen, 
+`include "timescale.v"
+
+module atahost_controller (clk, nReset, rst, irq, IDEctrl_rst, IDEctrl_IDEen, 
 			PIO_cmdport_T1, PIO_cmdport_T2, PIO_cmdport_T4, PIO_cmdport_Teoc, PIO_cmdport_IORDYen, 
 			PIOreq, PIOack, PIOa, PIOd, PIOq, PIOwe, 
 			RESETn, DDi, DDo, DDoe, DA, CS0n, CS1n, DIORn, DIOWn, IORDY, INTRQ);
@@ -106,19 +107,17 @@ module controller (clk, nReset, rst, irq, IDEctrl_rst, IDEctrl_IDEen,
 
 
 	// synchronize incoming signals
-	always
-	begin : synch_incoming
-		reg cIORDY;                               // capture IORDY
-		reg cINTRQ;                               // capture INTRQ
-		
-		@(posedge clk)
-		begin	
-			cIORDY <= IORDY;
-			cINTRQ <= INTRQ;
+	reg cIORDY;                               // capture IORDY
+	reg cINTRQ;                               // capture INTRQ
 
-			sIORDY <= cIORDY;
-			irq <= cINTRQ;
-		end
+	always@(posedge clk)
+	begin : synch_incoming
+
+		cIORDY <= IORDY;
+		cINTRQ <= INTRQ;
+
+		sIORDY <= cIORDY;
+		irq <= cINTRQ;
 	end
 
 	// generate ATA signals
@@ -184,10 +183,11 @@ module controller (clk, nReset, rst, irq, IDEctrl_rst, IDEctrl_IDEen,
 	assign IORDYen = PIO_cmdport_IORDYen;
 
 	// hookup timing controller
-	PIO_tctrl #(TWIDTH, PIO_mode0_T1, PIO_mode0_T2, PIO_mode0_T4, PIO_mode0_Teoc)
+	atahost_pio_tctrl #(TWIDTH, PIO_mode0_T1, PIO_mode0_T2, PIO_mode0_T4, PIO_mode0_Teoc)
 		PIO_timing_controller (.clk(clk), .nReset(nReset), .rst(rst), .IORDY_en(IORDYen), .T1(T1), .T2(T2), .T4(T4), .Teoc(Teoc),
 			.go(PIOgo), .we(PIOwe), .oe(PIOoe), .done(PIOdone), .dstrb(dstrb), .DIOR(PIOdior), .DIOW(PIOdiow), .IORDY(sIORDY) );
 
 	always@(posedge clk)
 		PIOack <= PIOdone | (PIOreq & !IDEctrl_IDEen); // acknowledge when done or when IDE not enabled (discard request)
+
 endmodule

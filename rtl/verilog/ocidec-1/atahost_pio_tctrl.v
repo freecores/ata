@@ -41,9 +41,10 @@
 //    when write, hold data for T4, disable output-enable signal
 // 6)	wait end_of_cycle_time. This is T2i or T9 or (T0-T1-T2) whichever takes the longest
 // 7)	start new cycle
-`timescale 1ns / 10ps
 
-module PIO_tctrl(clk, nReset, rst, IORDY_en, T1, T2, T4, Teoc, go, we, oe, done, dstrb, DIOR, DIOW, IORDY);
+`include "timescale.v"
+
+module atahost_pio_tctrl(clk, nReset, rst, IORDY_en, T1, T2, T4, Teoc, go, we, oe, done, dstrb, DIOR, DIOW, IORDY);
 	// parameter declarations
 	parameter TWIDTH = 8;
 	parameter PIO_MODE0_T1   =  6;             // 70ns
@@ -174,13 +175,5 @@ module PIO_tctrl(clk, nReset, rst, IORDY_en, T1, T2, T4, Teoc, go, we, oe, done,
 
 	// 5)	hookup end_of_cycle counter
 	ro_cnt #(TWIDTH) eoc_cnt(.clk(clk), .nReset(nReset), .rst(rst), .cnt_en(1'b1), .go(IORDY_done), .d(Teoc), .id(Teoc_m0), .done(Teoc_done), .q());
+
 endmodule
-
-
-
-
-
-
-
-
-
