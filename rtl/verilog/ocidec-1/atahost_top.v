@@ -125,9 +125,9 @@ module atahost_top (wb_clk_i, rst_nreset_i, wb_rst_i, wb_cyc_i, wb_stb_i, wb_ack
 	// generate registers
 
 	// generate register select signals
-	wire sel_ctrl        = CONsel & wb_we_i & (wb_adr_i == `ATA_CTRL_REG);
-	wire sel_stat        = CONsel & wb_we_i & (wb_adr_i == `ATA_STAT_REG);
-	wire sel_PIO_cmdport = CONsel & wb_we_i & (wb_adr_i == `ATA_PIO_CMD);
+	wire sel_ctrl        = CONsel & wb_we_i & (wb_adr_i[5:2] == `ATA_CTRL_REG);
+	wire sel_stat        = CONsel & wb_we_i & (wb_adr_i[5:2] == `ATA_STAT_REG);
+	wire sel_PIO_cmdport = CONsel & wb_we_i & (wb_adr_i[5:2] == `ATA_PIO_CMD);
 	// reserved 0x03-0x0f --
 
 	// generate control register
