@@ -28,7 +28,7 @@
 
 module atahost_top (wb_clk_i, arst_i, wb_rst_i, wb_cyc_i, wb_stb_i, wb_ack_o, wb_err_o,
 		wb_adr_i, wb_dat_i, wb_dat_o, wb_sel_i, wb_we_i, wb_inta_o,
-		resetn_pad_o, dd_pad_i, dd_pad_o, dd_padoen_o, da_pad_o, cs0n_pad_o,
+		resetn_pad_o, dd_pad_i, dd_pad_o, dd_padoe_o, da_pad_o, cs0n_pad_o,
 		cs1n_pad_o, diorn_pad_o, diown_pad_o, iordy_pad_i, intrq_pad_i);
 	//
 	// Parameter declarations
@@ -68,7 +68,7 @@ module atahost_top (wb_clk_i, arst_i, wb_rst_i, wb_cyc_i, wb_stb_i, wb_ack_o, wb
 	output        resetn_pad_o;
 	input  [15:0] dd_pad_i;
 	output [15:0] dd_pad_o;
-	output        dd_padoen_o;
+	output        dd_padoe_o;
 	output [ 2:0] da_pad_o;
 	output        cs0n_pad_o;
 	output        cs1n_pad_o;
@@ -235,7 +235,7 @@ module atahost_top (wb_clk_i, arst_i, wb_rst_i, wb_cyc_i, wb_stb_i, wb_ack_o, wb
 			.RESETn(resetn_pad_o),
 			.DDi(dd_pad_i),
 			.DDo(dd_pad_o),
-			.DDoe(dd_padoen_o),
+			.DDoe(dd_padoe_o),
 			.DA(da_pad_o),
 			.CS0n(cs0n_pad_o),
 			.CS1n(cs1n_pad_o),
