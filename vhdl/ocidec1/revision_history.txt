@@ -1,0 +1,40 @@
+-----------------------------
+Revision: 1.0
+Date: march 22nd, 2001
+Author: Richard Herveille
+- initial release
+-----------------------------
+
+-----------------------------
+Revision: 1.0a
+Date: april 12th, 2001
+Author: Richard Herveille
+- removed records.vhd
+- removed all references to records.vhd, make core compatible with VHDL to Verilog translation tools
+- fixed a minor bug where core didn't respond to IDEen bit.
+-----------------------------
+
+-----------------------------
+Revision: 1.1
+Date: June 18th, 2001
+Author: Richard Herveille
+- Changed PIOack generation. Avoid asserting PIOack continuosly when IDEen = '0'
+- Changed wishbone address-input from ADR_I(4 downto 0) to ADR_I(6 downto 2)
+-----------------------------
+
+
+-----------------------------
+Revision: 1.1a
+Date: June 19th, 2001
+Author: Richard Herveille
+- Missed a reference to ADR_I(4). Simplified DAT_O output multiplexor.
+-----------------------------
+
+-----------------------------
+Revision: 1.2
+Date: June 26th, 2001
+Author: Richard Herveille
+- Changed dPIOreq generation (controller.vhd). Wishbone burst accesses to ata device were not handled correctly
+- Change PIOack from "out" to "buffer" (controller.vhd + ata.vhd)
+-----------------------------
+
