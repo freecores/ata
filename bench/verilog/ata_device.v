@@ -38,16 +38,22 @@
 
 //  CVS Log
 //
-//  $Id: ata_device.v,v 1.1 2001-08-16 10:01:05 rudi Exp $
+//  $Id: ata_device.v,v 1.2 2002-02-25 06:07:21 rherveille Exp $
 //
-//  $Date: 2001-08-16 10:01:05 $
-//  $Revision: 1.1 $
-//  $Author: rudi $
+//  $Date: 2002-02-25 06:07:21 $
+//  $Revision: 1.2 $
+//  $Author: rherveille $
 //  $Locker:  $
 //  $State: Exp $
 //
 // Change History:
 //               $Log: not supported by cvs2svn $
+//               Revision 1.1  2001/08/16 10:01:05  rudi
+//
+//               - Added Test Bench
+//               - Added Synthesis scripts for Design Compiler
+//               - Fixed minor bug in atahost_top
+//
 //
 //
 //
@@ -105,7 +111,7 @@ always @(posedge ata_dior)
 	dout_en = 1;
    end
 
-always @(negedge ata_dior)
+always @(posedge ata_dior)
    begin
 	dout_en = 0;
    end
@@ -387,4 +393,5 @@ endspecify
 
 
 endmodule
+
 
