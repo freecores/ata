@@ -3,6 +3,7 @@
 //	description: OCIDEC1 OpenCores IDE controller type-1
 // author : Richard Herveille
 // rev.: 1.0  june  28th, 2001. Initial Verilog release
+// rev.: 1.1  July   3rd, 2001. Rewrote "IORDY" and "INTRQ" capture section.
 //
 
 // OCIDEC1 supports:	
@@ -101,20 +102,19 @@ module controller (clk, nReset, rst, irq, IDEctrl_rst, IDEctrl_IDEen,
 
 
 	// synchronize incoming signals
-	always
-		begin : synch_incoming
-			reg cIORDY;                               // capture IORDY
-			reg cINTRQ;                               // capture INTRQ
-	
-			@(posedge clk)
-				begin
-					cIORDY <= IORDY;
-					cINTRQ <= INTRQ;
+	always@(posedge clk)
+	begin
+		reg cIORDY;                               // capture IORDY
+		reg cINTRQ;                               // capture INTRQ
+		
+		begin	
+			cIORDY <= IORDY;
+			cINTRQ <= INTRQ;
 
-					sIORDY <= cIORDY;
-					irq <= cINTRQ;
-				end
+			sIORDY <= cIORDY;
+			irq <= cINTRQ;
 		end
+	end
 
 	// generate ATA signals
 	always@(posedge clk or negedge nReset)

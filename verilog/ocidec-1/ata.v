@@ -2,7 +2,8 @@
 // Project:		AT Atachement interface
 // ATA-3 rev7B compliant
 // Author:		Richard Herveille
-// rev.: 1.0  june 29th, 2001. Initial Verilog release
+// rev.: 1.0  June 29th, 2001. Initial Verilog release
+// rev.: 1.1  July  3rd, 2001. Changed 'ADR_I[5:2]' into 'ADR_I' on output multiplexor sensitivity list.
 //
 
 // DeviceType: OCIDEC-1: OpenCores IDE Controller type1
@@ -215,7 +216,7 @@ module atahost (CLK_I, nReset, RST_I, CYC_I, STB_I, ACK_O, ERR_O, ADR_I, DAT_I, 
 	assign INTA_O = stat[0];
 	
 	// generate output multiplexor
-	always@(ADR_I[5:2] or CtrlReg or stat or PIO_cmdport_T1 or PIO_cmdport_T2 or PIO_cmdport_T4 or PIO_cmdport_Teoc)
+	always@(ADR_I or CtrlReg or stat or PIO_cmdport_T1 or PIO_cmdport_T2 or PIO_cmdport_T4 or PIO_cmdport_Teoc)
 		case (ADR_I[5:2])
 			4'b0000: Q = CtrlReg;
 			4'b0001: Q = stat;
