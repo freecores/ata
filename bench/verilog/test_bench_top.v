@@ -37,16 +37,22 @@
 
 //  CVS Log
 //
-//  $Id: test_bench_top.v,v 1.1 2001-08-16 10:01:05 rudi Exp $
+//  $Id: test_bench_top.v,v 1.2 2002-02-16 10:41:16 rherveille Exp $
 //
-//  $Date: 2001-08-16 10:01:05 $
-//  $Revision: 1.1 $
-//  $Author: rudi $
+//  $Date: 2002-02-16 10:41:16 $
+//  $Revision: 1.2 $
+//  $Author: rherveille $
 //  $Locker:  $
 //  $State: Exp $
 //
 // Change History:
 //               $Log: not supported by cvs2svn $
+//               Revision 1.1  2001/08/16 10:01:05  rudi
+//
+//               - Added Test Bench
+//               - Added Synthesis scripts for Design Compiler
+//               - Fixed minor bug in atahost_top
+//
 //
 //
 //
@@ -202,7 +208,7 @@ assign ata_data = ata_doe ? ata_dout : 16'hzzzz;
 // DUT: ATA Host
 atahost_top u0(	//-- WISHBONE SYSCON signals
 		.wb_clk_i(		clk		),
-		.rst_nreset_i(		rst		),
+		.arst_i(		rst		),
 		.wb_rst_i(		~rst		),
 
 		//-- WISHBONE SLAVE signals
@@ -218,17 +224,17 @@ atahost_top u0(	//-- WISHBONE SYSCON signals
 		.wb_inta_o(		int		),
 
 		//-- ATA signals
-		.ata_resetn_pad_o(	ata_rst_	),
-		.ata_dd_pad_i(		ata_din		),
-		.ata_dd_pad_o(		ata_dout	),
-		.ata_dd_pad_oe(		ata_doe		),
-		.ata_da_pad_o(		ata_da		),
-		.ata_cs0n_pad_o(	ata_cs0		),
-		.ata_cs1n_pad_o(	ata_cs1		),
-		.ata_diorn_pad_o(	ata_dior_	),
-		.ata_diown_pad_o(	ata_diow_	),
-		.ata_iordy_pad_i(	ata_iordy	),
-		.ata_intrq_pad_i(	ata_intrq_r	)
+		.resetn_pad_o(	ata_rst_	),
+		.dd_pad_i(		ata_din		),
+		.dd_pad_o(		ata_dout	),
+		.dd_padoe_o(		ata_doe		),
+		.da_pad_o(		ata_da		),
+		.cs0n_pad_o(	ata_cs0		),
+		.cs1n_pad_o(	ata_cs1		),
+		.diorn_pad_o(	ata_dior_	),
+		.diown_pad_o(	ata_diow_	),
+		.iordy_pad_i(	ata_iordy	),
+		.intrq_pad_i(	ata_intrq_r	)
 		);
 
 // ATA Device Model
@@ -260,4 +266,5 @@ wb_mast	m0(	.clk(		clk		),
 `include "tests.v"
 
 endmodule
+
 
