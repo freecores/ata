@@ -36,10 +36,10 @@
 //
 //  CVS Log
 //
-//  $Id: atahost_controller.v,v 1.1 2002-02-18 14:26:46 rherveille Exp $
+//  $Id: atahost_controller.v,v 1.2 2002-05-19 06:05:28 rherveille Exp $
 //
-//  $Date: 2002-02-18 14:26:46 $
-//  $Revision: 1.1 $
+//  $Date: 2002-05-19 06:05:28 $
+//  $Revision: 1.2 $
 //  $Author: rherveille $
 //  $Locker:  $
 //  $State: Exp $
@@ -160,7 +160,7 @@ module atahost_controller (
 	reg cIORDY;                               // capture IORDY
 	reg cINTRQ;                               // capture INTRQ
 
-	always@(posedge clk)
+	always @(posedge clk)
 	begin : synch_incoming
 
 		cIORDY <= #1 IORDY;
@@ -171,15 +171,15 @@ module atahost_controller (
 	end
 
 	// generate ATA signals
-	always@(posedge clk or negedge nReset)
+	always @(posedge clk or negedge nReset)
 		if (~nReset)
 			begin
 				RESETn <= #1 1'b0;
 				DIORn  <= #1 1'b1;
 				DIOWn  <= #1 1'b1;
 				DA     <= #1 0;
-				CS0n	  <= #1 1'b1;
-				CS1n	  <= #1 1'b1;
+				CS0n   <= #1 1'b1;
+				CS1n   <= #1 1'b1;
 				DDo    <= #1 0;
 				DDoe   <= #1 1'b0;
 			end
@@ -189,8 +189,8 @@ module atahost_controller (
 				DIORn  <= #1 1'b1;
 				DIOWn  <= #1 1'b1;
 				DA     <= #1 0;
-				CS0n	  <= #1 1'b1;
-				CS1n	  <= #1 1'b1;
+				CS0n   <= #1 1'b1;
+				CS1n   <= #1 1'b1;
 				DDo    <= #1 0;
 				DDoe   <= #1 1'b0;
 			end
@@ -209,17 +209,27 @@ module atahost_controller (
 
 	// generate selected device
 	reg SelDev;
-	always@(posedge clk)
+	always @(posedge clk)
 		if (PIOdone & (PIOa == 4'b0110) & PIOwe)
 			SelDev <= #1 PIOd[4];
 
 	// generate PIOgo signal
-	reg dPIOreq, PIOgo;
-	always@(posedge clk)
-		begin
-			dPIOreq <= #1 PIOreq & !PIOack;
-			PIOgo   <= #1 PIOreq & !dPIOreq & IDEctrl_IDEen;
-		end
+	always @(posedge clk or negedge nReset)
+		if (~nReset)
+			begin
+				dPIOreq <= #1 1'b0;
+				PIOgo   <= #1 1'b0;
+			end
+		else if (rst)
+			begin
+				dPIOreq <= #1 1'b0;
+				PIOgo   <= #1 1'b0;
+			end
+		else
+			begin
+				dPIOreq <= #1 PIOreq & !PIOack;
+				PIOgo   <= #1 (PIOreq & !dPIOreq) & IDEctrl_IDEen;
+			end
 
 	//
 	// Hookup PIO access controller
@@ -259,7 +269,7 @@ module atahost_controller (
 			.IORDY(sIORDY)
 		);
 
-	always@(posedge clk)
+	always @(posedge clk)
 		PIOack <= #1 PIOdone | (PIOreq & !IDEctrl_IDEen); // acknowledge when done or when IDE not enabled (discard request)
 
 endmodule

@@ -35,10 +35,10 @@
 
 //  CVS Log
 //
-//  $Id: atahost_controller.v,v 1.3 2002-02-18 14:25:43 rherveille Exp $
+//  $Id: atahost_controller.v,v 1.4 2002-05-19 06:04:22 rherveille Exp $
 //
-//  $Date: 2002-02-18 14:25:43 $
-//  $Revision: 1.3 $
+//  $Date: 2002-05-19 06:04:22 $
+//  $Revision: 1.4 $
 //  $Author: rherveille $
 //  $Locker:  $
 //  $State: Exp $
@@ -215,11 +215,22 @@ module atahost_controller (clk, nReset, rst, irq, IDEctrl_rst, IDEctrl_IDEen,
 			PIOq <= #1 DDi;
 
 	// generate PIOgo signal
-	always@(posedge clk)
-	begin
-		dPIOreq <= #1 PIOreq & !PIOack;
-		PIOgo   <= #1 (PIOreq & !dPIOreq) & IDEctrl_IDEen;
-	end
+	always @(posedge clk or negedge nReset)
+		if (~nReset)
+			begin
+				dPIOreq <= #1 1'b0;
+				PIOgo   <= #1 1'b0;
+			end
+		else if (rst)
+			begin
+				dPIOreq <= #1 1'b0;
+				PIOgo   <= #1 1'b0;
+			end
+		else
+			begin
+				dPIOreq <= #1 PIOreq & !PIOack;
+				PIOgo   <= #1 (PIOreq & !dPIOreq) & IDEctrl_IDEen;
+			end
 
 	// set Timing signals
 	assign T1      = PIO_cmdport_T1;

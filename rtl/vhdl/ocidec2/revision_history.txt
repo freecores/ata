@@ -63,3 +63,12 @@ Author: Richard Herveille
 - added CVS log
 - moved registers and wishbone signals into 'atahost_wb_slave.vhd'
 -----------------------------
+
+-----------------------------
+Revision: 1.5
+Date: May 19th, 2002.
+Author: Richard Herveille
+- Fixed a potential bug that forced the core into an unknown state
+  when an asynchronous reset was given without a running clock
+-----------------------------
+

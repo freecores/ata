@@ -83,3 +83,11 @@ Date: Februar 17th, 2002.
 Author: Richard Herveille
 - moved wishbone interface into 'atahost_wb_slave.v'
 -----------------------------
+
+-----------------------------
+Revision: 1.10
+Date: May 19th, 2002.
+Author: Richard Herveille
+- Fixed a potential bug that forced the core into an unknown state
+  when an asynchronous reset was given without a running clock
+-----------------------------

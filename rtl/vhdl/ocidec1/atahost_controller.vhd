@@ -42,10 +42,10 @@
 --
 --  CVS Log
 --
---  $Id: atahost_controller.vhd,v 1.1 2002-02-18 14:29:39 rherveille Exp $
+--  $Id: atahost_controller.vhd,v 1.2 2002-05-19 06:06:48 rherveille Exp $
 --
---  $Date: 2002-02-18 14:29:39 $
---  $Revision: 1.1 $
+--  $Date: 2002-05-19 06:06:48 $
+--  $Revision: 1.2 $
 --  $Author: rherveille $
 --  $Locker:  $
 --  $State: Exp $
@@ -254,12 +254,20 @@ begin
 	end process gen_PIOq;
 
 	-- generate PIOgo signal
-	gen_PIOgo: process(clk)
+	gen_PIOgo: process(clk, nReset)
 	begin
-		if (clk'event and clk = '1') then
-			dPIOreq <= PIOreq and not PIOack;
-			PIOgo   <= (PIOreq and not dPIOreq) and IDEctrl_IDEen;
-		end if;
+		if (nReset = '0') then
+			dPIOreq <= '0';
+			PIOgo   <= '0';
+		elsif (clk'event and clk = '1') then
+			if (rst = '1') then
+				dPIOreq <= '0';
+				PIOgo   <= '0';
+			else
+				dPIOreq <= PIOreq and not PIOack;
+				PIOgo   <= (PIOreq and not dPIOreq) and IDEctrl_IDEen;
+			end if;
+	end
 	end process gen_PIOgo;
 
 	-- set Timing signals

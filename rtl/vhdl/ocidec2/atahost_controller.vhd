@@ -41,10 +41,10 @@
 --
 --  CVS Log
 --
---  $Id: atahost_controller.vhd,v 1.1 2002-02-18 14:30:48 rherveille Exp $
+--  $Id: atahost_controller.vhd,v 1.2 2002-05-19 06:07:09 rherveille Exp $
 --
---  $Date: 2002-02-18 14:30:48 $
---  $Revision: 1.1 $
+--  $Date: 2002-05-19 06:07:09 $
+--  $Revision: 1.2 $
 --  $Author: rherveille $
 --  $Locker:  $
 --  $State: Exp $
@@ -279,12 +279,20 @@ begin
 	end process gen_seldev;
 
 	-- generate PIOgo signal
-	gen_PIOgo: process(clk)
+	gen_PIOgo: process(clk, nReset)
 	begin
-		if (clk'event and clk = '1') then
-			dPIOreq <= PIOreq and not PIOack;
-			PIOgo <= (PIOreq and not dPIOreq) and IDEctrl_IDEen;
-		end if;
+		if (nReset = '0') then
+			dPIOreq <= '0';
+			PIOgo   <= '0';
+		elsif (clk'event and clk = '1') then
+			if (rst = '1') then
+				dPIOreq <= '0';
+				PIOgo   <= '0';
+			else
+				dPIOreq <= PIOreq and not PIOack;
+				PIOgo   <= (PIOreq and not dPIOreq) and IDEctrl_IDEen;
+			end if;
+	end
 	end process gen_PIOgo;
 	--
 	-- Hookup PIO access controller
@@ -334,7 +342,7 @@ begin
 	-- generate acknowledge
 	gen_ack: process(clk)
 	begin
-		if (clk'event and clk = '1') then
+		if (clk'event and clk = '1') the
 			PIOack <= PIOdone or (PIOreq and not IDEctrl_IDEen); -- acknowledge when done or when IDE not enabled (discard request)
 		end if;
 	end process gen_ack;
