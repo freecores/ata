@@ -53,3 +53,9 @@ Author: Richard Herveille
 - Changed filenames and top-level port names to be conform new OpenCores conventions
 -----------------------------
 
+-----------------------------
+Revision: 1.5
+Date: September 12th, 2001.
+Author: Richard Herveille
+- Made asynchronous input programmable (using atahost_define.v)
+-----------------------------

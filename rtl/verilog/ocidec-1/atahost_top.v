@@ -24,11 +24,12 @@
 // CS1-		select control block registers
 
 `include "timescale.v"
+`include "atahost_define.v"
 
-module atahost_top (wb_clk_i, rst_nreset_i, wb_rst_i, wb_cyc_i, wb_stb_i, wb_ack_o, wb_err_o,
+module atahost_top (wb_clk_i, arst_i, wb_rst_i, wb_cyc_i, wb_stb_i, wb_ack_o, wb_err_o,
 		wb_adr_i, wb_dat_i, wb_dat_o, wb_sel_i, wb_we_i, wb_inta_o,
-		ata_resetn_pad_o, ata_dd_pad_i, ata_dd_pad_o, ata_dd_pad_oe, ata_da_pad_o, ata_cs0n_pad_o,
-		ata_cs1n_pad_o, ata_diorn_pad_o, ata_diown_pad_o, ata_iordy_pad_i, ata_intrq_pad_i);
+		resetn_pad_o, dd_pad_i, dd_pad_o, dd_padoen_o, da_pad_o, cs0n_pad_o,
+		cs1n_pad_o, diorn_pad_o, diown_pad_o, iordy_pad_i, intrq_pad_i);
 	//
 	// Parameter declarations
 	//
@@ -45,8 +46,8 @@ module atahost_top (wb_clk_i, rst_nreset_i, wb_rst_i, wb_cyc_i, wb_stb_i, wb_ack
 
 	// WISHBONE SYSCON signals
 	input wb_clk_i;                               // master clock in
-	input rst_nreset_i;                           // asynchronous active low reset
-	input wb_rst_i;                               // synchronous active high reset
+	input arst_i;                                 // asynchronous reset
+	input wb_rst_i;                               // synchronous reset
 
 	// WISHBONE SLAVE signals
 	input        wb_cyc_i;                        // valid bus cycle input
@@ -64,18 +65,18 @@ module atahost_top (wb_clk_i, rst_nreset_i, wb_rst_i, wb_cyc_i, wb_stb_i, wb_ack
 	output        wb_inta_o;                      // interrupt request signal
 
 	// ATA signals
-	output        ata_resetn_pad_o;
-	input  [15:0] ata_dd_pad_i;
-	output [15:0] ata_dd_pad_o;
-	output        ata_dd_pad_oe;
-	output [ 2:0] ata_da_pad_o;
-	output        ata_cs0n_pad_o;
-	output        ata_cs1n_pad_o;
+	output        resetn_pad_o;
+	input  [15:0] dd_pad_i;
+	output [15:0] dd_pad_o;
+	output        dd_padoen_o;
+	output [ 2:0] da_pad_o;
+	output        cs0n_pad_o;
+	output        cs1n_pad_o;
 
-	output        ata_diorn_pad_o;
-	output        ata_diown_pad_o;
-	input         ata_iordy_pad_i;
-	input         ata_intrq_pad_i;
+	output        diorn_pad_o;
+	output        diown_pad_o;
+	input         iordy_pad_i;
+	input         intrq_pad_i;
 
 	//
 	// constant declarations
@@ -109,6 +110,10 @@ module atahost_top (wb_clk_i, rst_nreset_i, wb_rst_i, wb_cyc_i, wb_stb_i, wb_ack
 	// Module body //
 	/////////////////
 
+	// generate asynchronous reset level
+	// arst_signal is either a wire or a NOT-gate
+	wire arst_signal = arst_i ^ `ARST_LVL;
+
 	// generate bus cycle / address decoder
 	wire w_acc  = &wb_sel_i[1:0];                        // word access
 	wire dw_acc = &wb_sel_i;                             // double word access
@@ -125,14 +130,14 @@ module atahost_top (wb_clk_i, rst_nreset_i, wb_rst_i, wb_cyc_i, wb_stb_i, wb_ack
 	// generate registers
 
 	// generate register select signals
-	wire sel_ctrl        = CONsel & wb_we_i & (wb_adr_i[5:2] == `ATA_CTRL_REG);
-	wire sel_stat        = CONsel & wb_we_i & (wb_adr_i[5:2] == `ATA_STAT_REG);
-	wire sel_PIO_cmdport = CONsel & wb_we_i & (wb_adr_i[5:2] == `ATA_PIO_CMD);
+	wire sel_ctrl        = CONsel & wb_we_i & (wb_adr_i == `ATA_CTRL_REG);
+	wire sel_stat        = CONsel & wb_we_i & (wb_adr_i == `ATA_STAT_REG);
+	wire sel_PIO_cmdport = CONsel & wb_we_i & (wb_adr_i == `ATA_PIO_CMD);
 	// reserved 0x03-0x0f --
 
 	// generate control register
-	always@(posedge wb_clk_i or negedge rst_nreset_i)
-		if (~rst_nreset_i)
+	always@(posedge wb_clk_i or negedge arst_signal)
+		if (~arst_signal)
 			begin
 				CtrlReg[31:1] <= 0;
 				CtrlReg[0] <= 1'b1; // set reset bit (ATA-RESETn line)
@@ -154,8 +159,8 @@ module atahost_top (wb_clk_i, rst_nreset_i, wb_rst_i, wb_cyc_i, wb_stb_i, wb_ack
 	// generate status register clearable bits
 	reg dirq, int;
 	
-	always@(posedge wb_clk_i or negedge rst_nreset_i)
-		if (~rst_nreset_i)
+	always@(posedge wb_clk_i or negedge arst_signal)
+		if (~arst_signal)
 			begin
 				int  <= 1'b0;
 				dirq <= 1'b0;
@@ -181,8 +186,8 @@ module atahost_top (wb_clk_i, rst_nreset_i, wb_rst_i, wb_cyc_i, wb_stb_i, wb_ack
 
 
 	// generate PIO compatible / command-port timing register
-	always@(posedge wb_clk_i or negedge rst_nreset_i)
-		if (~rst_nreset_i)
+	always@(posedge wb_clk_i or negedge arst_signal)
+		if (~arst_signal)
 			begin
 				PIO_cmdport_T1   <= PIO_mode0_T1;
 				PIO_cmdport_T2   <= PIO_mode0_T2;
@@ -211,7 +216,7 @@ module atahost_top (wb_clk_i, rst_nreset_i, wb_rst_i, wb_cyc_i, wb_stb_i, wb_ack
 	atahost_controller #(TWIDTH, PIO_mode0_T1, PIO_mode0_T2, PIO_mode0_T4, PIO_mode0_Teoc)
 		u1 (
 			.clk(wb_clk_i),
-			.nReset(rst_nreset_i),
+			.nReset(arst_signal),
 			.rst(wb_rst_i),
 			.irq(irq),
 			.IDEctrl_rst(IDEctrl_rst),
@@ -227,17 +232,17 @@ module atahost_top (wb_clk_i, rst_nreset_i, wb_rst_i, wb_cyc_i, wb_stb_i, wb_ack
 			.PIOd(wb_dat_i[15:0]),
 			.PIOq(PIOq),
 			.PIOwe(wb_we_i),
-			.RESETn(ata_resetn_pad_o),
-			.DDi(ata_dd_pad_i),
-			.DDo(ata_dd_pad_o),
-			.DDoe(ata_dd_pad_oe),
-			.DA(ata_da_pad_o),
-			.CS0n(ata_cs0n_pad_o),
-			.CS1n(ata_cs1n_pad_o),
-			.DIORn(ata_diorn_pad_o),
-			.DIOWn(ata_diown_pad_o),
-			.IORDY(ata_iordy_pad_i),
-			.INTRQ(ata_intrq_pad_i)
+			.RESETn(resetn_pad_o),
+			.DDi(dd_pad_i),
+			.DDo(dd_pad_o),
+			.DDoe(dd_padoen_o),
+			.DA(da_pad_o),
+			.CS0n(cs0n_pad_o),
+			.CS1n(cs1n_pad_o),
+			.DIORn(diorn_pad_o),
+			.DIOWn(diown_pad_o),
+			.IORDY(iordy_pad_i),
+			.INTRQ(intrq_pad_i)
 		);
 
 	//
@@ -267,3 +272,5 @@ module atahost_top (wb_clk_i, rst_nreset_i, wb_rst_i, wb_cyc_i, wb_stb_i, wb_ack
 	assign wb_dat_o = `ATA_ATA_ADR ? {16'h0000, PIOq} : Q;
 
 endmodule
+
+
