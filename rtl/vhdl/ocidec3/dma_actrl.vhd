@@ -308,13 +308,14 @@ begin
 		process(clk, nReset)
 			variable request : std_logic;
 		begin
+			request := (DMActrl_dir and DMARQ and not TxFull and not hgo) or not RxEmpty;
+
 			if (nReset = '0') then
 				iDMA_req <= '0';
 			elsif (clk'event and clk = '1') then
 				if (rst = '1') then
 					iDMA_req <= '0';
 				else
-					request := (DMActrl_dir and DMARQ and not TxFull and not hgo) or not RxEmpty;
 					iDMA_req <= DMActrl_DMAen and not DMA_ack and (request or iDMA_req);
 --				DMA_req <= (DMActrl_DMAen and DMActrl_dir and DMARQ and not TxFull and not hgo) or not RxEmpty;
 				end if;
@@ -357,12 +358,13 @@ begin
 		begin
 			if (clk'event and clk = '1') then
 				if (SelDev = '1') then                      -- device1 selected
-					Tm         <= dev1_Tm;
-					Td         <= dev1_Td;
-					Teoc       <= dev1_Teoc;
+					Tm   <= dev1_Tm;
+					Td   <= dev1_Td;
+					Teoc <= dev1_Teoc;
 				else                                        -- device0 selected
-					Tm         <= dev0_Tm;
-					Td         <= dev0_Td;
+					Tm   <= dev0_Tm;
+					Td   <= dev0_Td;
+					Teoc <= dev0_Teoc;
 				end if;
 			end if;
 		end process sel_dev_t;
