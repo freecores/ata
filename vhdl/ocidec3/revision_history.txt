@@ -27,3 +27,11 @@ Date: june 19th, 2001
 Author: Richard Herveille
 - Simplified DAT_O output multiplexor
 -----------------------------
+
+-----------------------------
+Revision: 1.3
+Date: July 11th, 2001
+Author: Richard Herveille
+- renamed 'ata.vhd' to 'atahost.vhd'
+- Changed 'go' & 'igo' generation (pio_tctrl.vhdl).
+-----------------------------

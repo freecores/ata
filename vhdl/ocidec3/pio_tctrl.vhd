@@ -2,7 +2,8 @@
 -- file: pio_tctrl.vhd
 --	description: PIO mode timing controller for ATA controller
 -- author : Richard Herveille
--- rev.: 1.0 march 7th, 2001
+-- rev.: 1.0 march  7th, 2001. Initial release
+-- rev.: 1.1 July  11th, 2001. Changed 'igo' & 'hold_go' signal generation.
 --
 
 --
@@ -126,11 +127,11 @@ begin
 				hold_go <= '0';
 			else
 				busy <= (igo or busy) and not Teoc_done;
-				hold_go <= go or (hold_go and busy);
+				hold_go <= (go or (hold_go and busy)) and not igo;
 			end if;
 		end if;
 	end process;
-	igo <= hold_go and not busy;
+	igo <= (go or hold_go) and not busy;
 
 	-- 1)	hookup T1 counter
 	t1_cnt : ro_cnt generic map (SIZE => TWIDTH)
@@ -195,6 +196,12 @@ begin
 		port map (clk => clk, nReset => nReset, rst => rst, go => IORDY_done, D => Teoc, ID => Teoc_m0, done => Teoc_done);
 
 end architecture structural;
+
+
+
+
+
+
 
 
 
