@@ -1,8 +1,9 @@
 //
-// file: pio_tctrl.vhd
+// file: pio_tctrl.v
 //	description: PIO mode timing controller for ATA controller
 // author : Richard Herveille
-// rev.: 1.0 march 7th, 2001
+// Rev. 1.0 June 27th, 2001. Initial Verilog release
+// Rev. 1.1 July  2nd, 2001. Fixed incomplete port list and some Verilog related issues.
 //
 
 //
@@ -41,7 +42,7 @@
 // 6)	wait end_of_cycle_time. This is T2i or T9 or (T0-T1-T2) whichever takes the longest
 // 7)	start new cycle
 
-module pio_tctrl(clk, nReset, rst, IORDY_en, T1, T2, T4, Teoc, go, we, oe, done, dstrb, DIOR, DIOW, IORDY);
+module PIO_tctrl(clk, nReset, rst, IORDY_en, T1, T2, T4, Teoc, go, we, oe, done, dstrb, DIOR, DIOW, IORDY);
 	// parameter declarations
 	parameter TWIDTH = 8;
 	parameter PIO_MODE0_T1   =  6;             // 70ns
@@ -84,10 +85,10 @@ module pio_tctrl(clk, nReset, rst, IORDY_en, T1, T2, T4, Teoc, go, we, oe, done,
 	// constant declarations
 	//
 	// PIO mode 0 settings (@100MHz clock)
-	parameter [TWIDTH-1:0] T1_m0   = PIO_MODE0_T1;
-	parameter [TWIDTH-1:0] T2_m0   = PIO_MODE0_T2;
-	parameter [TWIDTH-1:0] T4_m0   = PIO_MODE0_T4;
-	parameter [TWIDTH-1:0] Teoc_m0 = PIO_MODE0_Teoc;
+	wire [TWIDTH-1:0] T1_m0   = PIO_MODE0_T1;
+	wire [TWIDTH-1:0] T2_m0   = PIO_MODE0_T2;
+	wire [TWIDTH-1:0] T4_m0   = PIO_MODE0_T4;
+	wire [TWIDTH-1:0] Teoc_m0 = PIO_MODE0_Teoc;
 
 	//
 	// variable declaration
@@ -123,7 +124,7 @@ module pio_tctrl(clk, nReset, rst, IORDY_en, T1, T2, T4, Teoc, go, we, oe, done,
 	assign igo = hold_go & !busy;
 
 	// 1)	hookup T1 counter
-	ro_cnt #(TWIDTH) t1_cnt(.clk(clk), .nReset(nReset), .rst(rst), .go(igo), .d(T1), .id(T1_m0), .done(T1done));
+	ro_cnt #(TWIDTH) t1_cnt(.clk(clk), .nReset(nReset), .rst(rst), .cnt_en(1'b1), .go(igo), .d(T1), .id(T1_m0), .done(T1done), .q());
 
 	// 2)	set (and reset) DIOR-/DIOW-, set output-enable when writing to device
 	always@(posedge clk or negedge nReset)
@@ -147,7 +148,7 @@ module pio_tctrl(clk, nReset, rst, IORDY_en, T1, T2, T4, Teoc, go, we, oe, done,
 			end
 
 	// 3)	hookup T2 counter
-	ro_cnt #(TWIDTH) t2_cnt(.clk(clk), .nReset(nReset), .rst(rst), .go(T1done), .d(T2), .id(T2_m0), .done(T2done));
+	ro_cnt #(TWIDTH) t2_cnt(.clk(clk), .nReset(nReset), .rst(rst), .cnt_en(1'b1), .go(T1done), .d(T2), .id(T2_m0), .done(T2done), .q());
 
 	// 4)	check IORDY (if used), generate release_DIOR-/DIOW- signal (ie negate DIOR-/DIOW-)
 	// hold T2done
@@ -166,10 +167,16 @@ module pio_tctrl(clk, nReset, rst, IORDY_en, T1, T2, T4, Teoc, go, we, oe, done,
 		dstrb <= IORDY_done;
 
 	// hookup data hold counter
-	ro_cnt #(TWIDTH) dhold_cnt(.clk(clk), .nReset(nReset), .rst(rst), .go(IORDY_done), .d(T4), .id(T4_m0), .done(T4done));
+	ro_cnt #(TWIDTH) dhold_cnt(.clk(clk), .nReset(nReset), .rst(rst), .cnt_en(1'b1), .go(IORDY_done), .d(T4), .id(T4_m0), .done(T4done), .q());
 	assign done = T4done; // placing done here provides the fastest return possible, 
                         // while still guaranteeing data and address hold-times
 
 	// 5)	hookup end_of_cycle counter
-	ro_cnt #(TWIDTH) eoc_cnt(.clk(clk), .nReset(nReset), .rst(rst), .go(IORDY_done), .d(Teoc), .id(Teoc_m0), .done(Teoc_done));
+	ro_cnt #(TWIDTH) eoc_cnt(.clk(clk), .nReset(nReset), .rst(rst), .cnt_en(1'b1), .go(IORDY_done), .d(Teoc), .id(Teoc_m0), .done(Teoc_done), .q());
 endmodule
+
+
+
+
+
+

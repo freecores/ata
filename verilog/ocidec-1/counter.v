@@ -1,9 +1,9 @@
 //
-// Counter.vhd, contains 1) run-once down-counter  2) general purpose up-down riple-carry counter
+// Counter.v, contains 1) run-once down-counter  2) general purpose up-down riple-carry counter
 //
 // Author: Richard Herveille
 // Rev. 1.0 June 27th, 2001. Initial Verilog release
-//
+// Rev. 1.1 July  2nd, 2001. Fixed incomplete port list.
 //
 
 
@@ -76,8 +76,8 @@ module ro_cnt (clk, nReset, rst, cnt_en, go, done, d, q, id);
 	input  [SIZE-1:0] id; // initial data after reset
 
 	// variable declarations
-	reg rci, rco;
-	wire nld;
+	reg rci;
+	wire nld, rco;
 
 	//
 	// module body
@@ -94,8 +94,8 @@ module ro_cnt (clk, nReset, rst, cnt_en, go, done, d, q, id);
 	assign nld = !go;
 
 	// hookup counter
-	ud_cnt #(SIZE) cnt (.clk(clk), .nReset(nReset), .rst(rst), .cnt_en(cnt_en), .nld(nld), .d(d), .q(q),
-		.resd(id), .rci(rci), .rco(rco));
+	ud_cnt #(SIZE) cnt (.clk(clk), .nReset(nReset), .rst(rst), .cnt_en(cnt_en),
+		.ud(1'b0), .nld(nld), .d(d), .q(q), .resd(id), .rci(rci), .rco(rco));
 
 	// assign outputs
 	assign done = rco;

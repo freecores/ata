@@ -1,5 +1,5 @@
 //
-// file: controller.vhd
+// file: controller.v
 //	description: OCIDEC1 OpenCores IDE controller type-1
 // author : Richard Herveille
 // rev.: 1.0  june  28th, 2001. Initial Verilog release
@@ -184,3 +184,4 @@ module controller (clk, nReset, rst, irq, IDEctrl_rst, IDEctrl_IDEen,
 
 	assign PIOack = PIOdone | (PIOreq & !IDEctrl_IDEen); // acknowledge when done or when IDE not enabled (discard request)
 endmodule
+
