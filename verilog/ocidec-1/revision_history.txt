@@ -1,0 +1,30 @@
+-----------------------------
+Revision: 1.0
+Date: June 28th, 2001
+Author: Richard Herveille
+- Initial Verilog release (beta)
+-----------------------------
+
+-----------------------------
+Revision: 1.1
+Date: June 18th, 2001
+Author: Richard Herveille
+- Fixed some incomplete port lists and some Verilog related issues.
+  Design now completely compiles
+-----------------------------
+
+-----------------------------
+Revision: 1.1a
+Date: July 3rd, 2001
+Author: Richard Herveille
+- Rewrote some sections (controller.v, ata.v). Minor Verilog coding styles issues.
+-----------------------------
+
+-----------------------------
+Revision: 1.2
+Date: July 9th, 2001
+Author: Richard Herveille
+- added 'timescale to all files
+- fixed error where control registers latched data on all rising clock edges, instead of
+  when addressed.
+-----------------------------
