@@ -59,3 +59,10 @@ Date: September 12th, 2001.
 Author: Richard Herveille
 - Made asynchronous input programmable (using atahost_define.v)
 -----------------------------
+
+-----------------------------
+Revision: 1.5
+Date: October 16th, 2001.
+Author: Richard Herveille
+- Changed programmable asynchronous level from define to parameter
+-----------------------------

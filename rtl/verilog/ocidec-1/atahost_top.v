@@ -2,12 +2,13 @@
 // Project:		AT Atachement interface
 // ATA-3 rev7B compliant
 // Author:		Richard Herveille
-// rev.: 1.0   June 29th, 2001. Initial Verilog release
-// rev.: 1.1   July  3rd, 2001. Changed 'ADR_I[5:2]' into 'ADR_I' on output multiplexor sensitivity list.
-// rev.: 1.2   July  9th, 2001. Fixed register control; registers latched data on all edge cycles instead when selected.
-// rev.: 1.3   July 11th, 2001. Fixed case sensitivity error (nRESET instead of nReset) in "controller" module declaration.
-// rev.: 1.4   July 26th, 2001. Fixed non-blocking assignments.
-// rev.: 1.5 August 15th, 2001. Changed port-names to conform to new OpenCores naming-convention.
+// rev.: 1.0    June 29th, 2001. Initial Verilog release
+// rev.: 1.1    July  3rd, 2001. Changed 'ADR_I[5:2]' into 'ADR_I' on output multiplexor sensitivity list.
+// rev.: 1.2    July  9th, 2001. Fixed register control; registers latched data on all edge cycles instead when selected.
+// rev.: 1.3    July 11th, 2001. Fixed case sensitivity error (nRESET instead of nReset) in "controller" module declaration.
+// rev.: 1.4    July 26th, 2001. Fixed non-blocking assignments.
+// rev.: 1.5  August 15th, 2001. Changed port-names to conform to new OpenCores naming-convention.
+// rev.: 1.6 October 15th, 2001. Removed ata_defines file. Changed define statement to parameter
 
 // DeviceType: OCIDEC-1: OpenCores IDE Controller type1
 // Features: PIO Compatible Timing
@@ -24,7 +25,6 @@
 // CS1-		select control block registers
 
 `include "timescale.v"
-`include "atahost_define.v"
 
 module atahost_top (wb_clk_i, arst_i, wb_rst_i, wb_cyc_i, wb_stb_i, wb_ack_o, wb_err_o,
 		wb_adr_i, wb_dat_i, wb_dat_o, wb_sel_i, wb_we_i, wb_inta_o,
@@ -33,6 +33,8 @@ module atahost_top (wb_clk_i, arst_i, wb_rst_i, wb_cyc_i, wb_stb_i, wb_ack_o, wb
 	//
 	// Parameter declarations
 	//
+	parameter ARST_LVL = 1'b0;                    // asynchronous reset level
+
 	parameter TWIDTH = 8;                         // counter width
 	// PIO mode 0 settings (@100MHz clock)
 	parameter PIO_mode0_T1   =  6;                // 70ns
@@ -112,7 +114,7 @@ module atahost_top (wb_clk_i, arst_i, wb_rst_i, wb_cyc_i, wb_stb_i, wb_ack_o, wb
 
 	// generate asynchronous reset level
 	// arst_signal is either a wire or a NOT-gate
-	wire arst_signal = arst_i ^ `ARST_LVL;
+	wire arst_signal = arst_i ^ ARST_LVL;
 
 	// generate bus cycle / address decoder
 	wire w_acc  = &wb_sel_i[1:0];                        // word access
@@ -272,5 +274,6 @@ module atahost_top (wb_clk_i, arst_i, wb_rst_i, wb_cyc_i, wb_stb_i, wb_ack_o, wb
 	assign wb_dat_o = `ATA_ATA_ADR ? {16'h0000, PIOq} : Q;
 
 endmodule
+
 
 
