@@ -5,6 +5,7 @@
 // rev.: 1.0  June 29th, 2001. Initial Verilog release
 // rev.: 1.1  July  3rd, 2001. Changed 'ADR_I[5:2]' into 'ADR_I' on output multiplexor sensitivity list.
 // rev.: 1.2  July  9th, 2001. Fixed register control; registers latched data on all edge cycles instead when selected.
+// rev.: 1.3  July 11th, 2001. Fixed case sensitivity error (nRESET instead of nReset) in "controller" module declaration.
 
 // DeviceType: OCIDEC-1: OpenCores IDE Controller type1
 // Features: PIO Compatible Timing
@@ -199,7 +200,7 @@ module ata (CLK_I, nReset, RST_I, CYC_I, STB_I, ACK_O, ERR_O, ADR_I, DAT_I, DAT_
 	// hookup controller section
 	//
 	controller #(TWIDTH, PIO_mode0_T1, PIO_mode0_T2, PIO_mode0_T4, PIO_mode0_Teoc)
-		u1 (CLK_I, nRESET, RST_I, irq, IDEctrl_rst,	IDEctrl_IDEen, PIO_cmdport_T1, PIO_cmdport_T2, PIO_cmdport_T4, PIO_cmdport_Teoc, PIO_cmdport_IORDYen, 
+		u1 (CLK_I, nReset, RST_I, irq, IDEctrl_rst,	IDEctrl_IDEen, PIO_cmdport_T1, PIO_cmdport_T2, PIO_cmdport_T4, PIO_cmdport_Teoc, PIO_cmdport_IORDYen, 
 			PIOsel, PIOack, ADR_I[5:2], DAT_I[15:0], PIOq, WE_I, RESETn, DDi, DDo, DDoe, DA, CS0n, CS1n, DIORn, DIOWn, IORDY, INTRQ);
 
 	//
