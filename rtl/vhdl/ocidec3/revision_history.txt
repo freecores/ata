@@ -35,3 +35,19 @@ Author: Richard Herveille
 - renamed 'ata.vhd' to 'atahost.vhd'
 - Changed 'go' & 'igo' generation (pio_tctrl.vhdl).
 -----------------------------
+
+-----------------------------
+Revision: 1.4
+Date: Februar 17th, 2002
+Author: Richard Herveille
+- renamed all files to 'atahost_***.vhd'
+- broke-up 'counter.vhd' into 'ud_cnt.vhd' and 'ro_cnt.vhd'
+- changed resD input to generic RESD in ud_cnt.vhd
+- changed ID input to generic ID in ro_cnt.vhd
+- changed core to reflect changes in ro_cnt.vhd
+- removed references to 'count' library
+- changed IO names
+- added disclaimer
+- added CVS log
+- moved registers and wishbone signals into 'atahost_wb_slave.vhd'
+-----------------------------

@@ -1,16 +1,59 @@
+---------------------------------------------------------------------
+----                                                             ----
+----  OpenCores IDE Controller                                   ----
+----  ATA/ATAPI-5 PIO controller with write PingPong             ----
+----                                                             ----
+----  Author: Richard Herveille                                  ----
+----          richard@asics.ws                                   ----
+----          www.asics.ws                                       ----
+----                                                             ----
+---------------------------------------------------------------------
+----                                                             ----
+---- Copyright (C) 2001, 2002 Richard Herveille                  ----
+----                          richard@asics.ws                   ----
+----                                                             ----
+---- This source file may be used and distributed without        ----
+---- restriction provided that this copyright statement is not   ----
+---- removed from the file and that any derivative work contains ----
+---- the original copyright notice and the associated disclaimer.----
+----                                                             ----
+----     THIS SOFTWARE IS PROVIDED ``AS IS'' AND WITHOUT ANY     ----
+---- EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED   ----
+---- TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS   ----
+---- FOR A PARTICULAR PURPOSE. IN NO EVENT SHALL THE AUTHOR      ----
+---- OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,         ----
+---- INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES    ----
+---- (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE   ----
+---- GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR        ----
+---- BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF  ----
+---- LIABILITY, WHETHER IN  CONTRACT, STRICT LIABILITY, OR TORT  ----
+---- (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT  ----
+---- OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE         ----
+---- POSSIBILITY OF SUCH DAMAGE.                                 ----
+----                                                             ----
+---------------------------------------------------------------------
+
+-- rev.: 1.0 march 8th, 2001. Initial release
 --
--- file: controller.vhd
---	description: single ATA-controller
--- author : Richard Herveille
--- rev.: 1.0 march 8th, 2001
+--  CVS Log
 --
+--  $Id: atahost_pio_controller.vhd,v 1.1 2002-02-18 14:32:12 rherveille Exp $
+--
+--  $Date: 2002-02-18 14:32:12 $
+--  $Revision: 1.1 $
+--  $Author: rherveille $
+--  $Locker:  $
+--  $State: Exp $
+--
+-- Change History:
+--               $Log: not supported by cvs2svn $
 --
 
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.std_logic_arith.all;
 
-entity PIOcontroller is
+entity atahost_pio_controller is
 	generic(
 		TWIDTH : natural := 8;                        -- counter width
 
@@ -21,9 +64,9 @@ entity PIOcontroller is
 		PIO_mode0_Teoc : natural := 23                -- 240ns ==> T0 - T1 - T2 = 600 - 70 - 290 = 240
 	);
 	port(
-		clk : in std_logic;  		                    	  -- master clock in
+		clk    : in std_logic;  		                 	  -- master clock in
 		nReset	: in std_logic := '1';                 -- asynchronous active low reset
-		rst : in std_logic := '0';                    -- synchronous active high reset
+		rst    : in std_logic := '0';                 -- synchronous active high reset
 		
 		-- control / registers
 		IDEctrl_IDEen,
@@ -50,37 +93,37 @@ entity PIOcontroller is
 		dport1_Teoc : in unsigned(7 downto 0);
 		dport1_IORDYen : in std_logic;                -- PIO mode data-port / fast timing device 1
 
-		sel : in std_logic;                           -- PIO controller selected
+		sel : in  std_logic;                          -- PIO controller selected
 		ack : out std_logic;                          -- PIO controller acknowledge
-		a : in unsigned(3 downto 0);                  -- lower address bits
-		we : in std_logic;                            -- write enable input
-		d : in std_logic_vector(15 downto 0);
-		q : out std_logic_vector(15 downto 0);
+		a   : in  unsigned(3 downto 0);               -- lower address bits
+		we  : in  std_logic;                          -- write enable input
+		d   : in  std_logic_vector(15 downto 0);
+		q   : out std_logic_vector(15 downto 0);
 
 		PIOreq : out std_logic;                       -- PIO transfer request
 		PPFull : out std_logic;                       -- PIO Write PingPong Full
-		go : in std_logic;                            -- start PIO transfer
-		done : buffer std_logic;                      -- done with PIO transfer
+		go     : in std_logic;                        -- start PIO transfer
+		done   : buffer std_logic;                    -- done with PIO transfer
 
 		PIOa : out unsigned(3 downto 0);              -- PIO address, address lines towards ATA devices
 		PIOd : out std_logic_vector(15 downto 0);     -- PIO data, data towards ATA devices
 
 		SelDev : buffer std_logic;                    -- Selected Device, Dev-bit in ATA Device/Head register
 
-		DDi	: in std_logic_vector(15 downto 0);
+		DDi	 : in std_logic_vector(15 downto 0);
 		DDoe : buffer std_logic;
 
-		DIOR	: buffer std_logic;
-		DIOW	: buffer std_logic;
+		DIOR	 : buffer std_logic;
+		DIOW	 : buffer std_logic;
 		IORDY	: in std_logic
 	);
-end entity PIOcontroller;
+end entity atahost_pio_controller;
 
-architecture structural of PIOcontroller is
+architecture structural of atahost_pio_controller is
 	--
 	-- component declarations
 	--
-	component PIO_actrl is
+	component atahost_pio_actrl is
 	generic(
 		TWIDTH : natural := 8;                     -- counter width
 
@@ -91,9 +134,9 @@ architecture structural of PIOcontroller is
 		PIO_mode0_Teoc : natural := 23             -- 240ns ==> T0 - T1 - T2 = 600 - 70 - 290 = 240
 	);
 	port(
-		clk : in std_logic;                        -- master clock
+		clk    : in std_logic;                     -- master clock
 		nReset : in std_logic;                     -- asynchronous active low reset
-		rst : in std_logic;                        -- synchronous active high reset
+		rst    : in std_logic;                     -- synchronous active high reset
 
 		IDEctrl_FATR0,
 		IDEctrl_FATR1 : in std_logic;
@@ -118,20 +161,20 @@ architecture structural of PIOcontroller is
 
 		SelDev : in std_logic;                     -- Selected device	
 
-		Go : in std_logic;                         -- Start transfer sequence
-		Done : out std_logic;                      -- Transfer sequence done
-		Dir : in std_logic;                        -- Transfer direction '1'=write, '0'=read
-		A : in unsigned(3 downto 0);               -- PIO transfer address
-		Q : out std_logic_vector(15 downto 0);     -- Data read from ATA devices
+		go   : in  std_logic;                      -- Start transfer sequence
+		done : out std_logic;                      -- Transfer sequence done
+		dir  : in  std_logic;                      -- Transfer direction '1'=write, '0'=read
+		a    : in  unsigned(3 downto 0);           -- PIO transfer address
+		q    : out std_logic_vector(15 downto 0);  -- Data read from ATA devices
 
 		DDi : in std_logic_vector(15 downto 0);    -- Data from ATA DD bus
-		oe : buffer std_logic;                     -- DDbus output-enable signal
+		oe  : buffer std_logic;                    -- DDbus output-enable signal
 
 		DIOR,
-		DIOW : buffer std_logic;
+		DIOW  : buffer std_logic;
 		IORDY : in std_logic 
 	);
-	end component PIO_actrl;
+	end component atahost_pio_actrl;
 
 	--
 	-- signals
@@ -147,7 +190,7 @@ begin
 	--
 	-- generate selected device
 	--
-	gen_seldev: process(clk)
+	gen_seldev: process(clk, pp_a)
 		variable Asel : std_logic; -- address selected
 	begin
 		Asel := not pp_a(3) and pp_a(2) and pp_a(1) and not pp_a(0); -- header/device register
@@ -175,7 +218,7 @@ begin
 		signal iack : std_logic;
 	begin
 		-- generate PIO acknowledge
-		gen_ack: process(clk)
+		gen_ack: process(clk, ping_valid, dping_valid, pong_valid, dpong_valid, we)
 			variable ping_re, ping_fe, pong_re, pong_fe : std_logic;
 		begin
 			-- detect rising edge of ping_valid and pong_valid
@@ -285,13 +328,47 @@ begin
 	--
 	-- Hookup PIO access controller
 	--
-	PIO_access_control: PIO_actrl
-		generic map(TWIDTH => TWIDTH, PIO_mode0_T1 => PIO_mode0_T1, PIO_mode0_T2 => PIO_mode0_T2, PIO_mode0_T4 => PIO_mode0_T4, PIO_mode0_Teoc => PIO_mode0_Teoc)
-		port map(clk => clk,nReset => nReset, rst => rst, IDEctrl_FATR0 => IDEctrl_FATR0, IDEctrl_FATR1 => IDEctrl_FATR1, 
-			cmdport_T1 => cmdport_T1, cmdport_T2 => cmdport_T2, cmdport_T4 => cmdport_T4, cmdport_Teoc => cmdport_Teoc, cmdport_IORDYen => cmdport_IORDYen,
-			dport0_T1 => dport0_T1, dport0_T2 => dport0_T2, dport0_T4 => dport0_T4, dport0_Teoc => dport0_Teoc, dport0_IORDYen => dport0_IORDYen,
-			dport1_T1 => dport1_T1, dport1_T2 => dport1_T2, dport1_T4 => dport1_T4, dport1_Teoc => dport1_Teoc, dport1_IORDYen => dport1_IORDYen,
-			SelDev => SelDev, Go => go, Done => idone, Dir => pp_we, A => pp_a, Q => Q, DDi => DDi, oe => DDoe, DIOR => dior, DIOW => diow, IORDY => IORDY);
+	PIO_access_control: atahost_pio_actrl
+		generic map(
+			TWIDTH => TWIDTH,
+			PIO_mode0_T1 => PIO_mode0_T1,
+			PIO_mode0_T2 => PIO_mode0_T2,
+			PIO_mode0_T4 => PIO_mode0_T4,
+			PIO_mode0_Teoc => PIO_mode0_Teoc
+		)
+		port map(
+			clk    => clk,
+			nReset => nReset,
+			rst    => rst,
+			IDEctrl_FATR0 => IDEctrl_FATR0,
+			IDEctrl_FATR1 => IDEctrl_FATR1, 
+			cmdport_T1   => cmdport_T1,
+			cmdport_T2   => cmdport_T2,
+			cmdport_T4   => cmdport_T4,
+			cmdport_Teoc => cmdport_Teoc,
+			cmdport_IORDYen => cmdport_IORDYen,
+			dport0_T1   => dport0_T1,
+			dport0_T2   => dport0_T2,
+			dport0_T4   => dport0_T4,
+			dport0_Teoc => dport0_Teoc,
+			dport0_IORDYen => dport0_IORDYen,
+			dport1_T1   => dport1_T1,
+			dport1_T2   => dport1_T2,
+			dport1_T4   => dport1_T4,
+			dport1_Teoc => dport1_Teoc,
+			dport1_IORDYen => dport1_IORDYen,
+			SelDev => SelDev,
+			go     => go,
+			done   => idone,
+			dir    => pp_we,
+			a      => pp_a,
+			q      => Q,
+			DDi    => DDi,
+			oe     => DDoe,
+			DIOR   => dior,
+			DIOW   => diow,
+			IORDY  => IORDY
+		);
 
 	--
 	-- assign outputs
@@ -300,8 +377,4 @@ begin
 	PIOd <= pp_d;
 	Done <= idone;
 end architecture structural;
-
-
-
-
 

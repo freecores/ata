@@ -1,9 +1,55 @@
+---------------------------------------------------------------------
+----                                                             ----
+----  OpenCores IDE Controller                                   ----
+----  DMA (single- and multiword) mode access controller         ----
+----                                                             ----
+----  Author: Richard Herveille                                  ----
+----          richard@asics.ws                                   ----
+----          www.asics.ws                                       ----
+----                                                             ----
+---------------------------------------------------------------------
+----                                                             ----
+---- Copyright (C) 2001, 2002 Richard Herveille                  ----
+----                          richard@asics.ws                   ----
+----                                                             ----
+---- This source file may be used and distributed without        ----
+---- restriction provided that this copyright statement is not   ----
+---- removed from the file and that any derivative work contains ----
+---- the original copyright notice and the associated disclaimer.----
+----                                                             ----
+----     THIS SOFTWARE IS PROVIDED ``AS IS'' AND WITHOUT ANY     ----
+---- EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED   ----
+---- TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS   ----
+---- FOR A PARTICULAR PURPOSE. IN NO EVENT SHALL THE AUTHOR      ----
+---- OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,         ----
+---- INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES    ----
+---- (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE   ----
+---- GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR        ----
+---- BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF  ----
+---- LIABILITY, WHETHER IN  CONTRACT, STRICT LIABILITY, OR TORT  ----
+---- (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT  ----
+---- OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE         ----
+---- POSSIBILITY OF SUCH DAMAGE.                                 ----
+----                                                             ----
+---------------------------------------------------------------------
+
+-- rev.: 1.0 march 9th, 2001. Initial release
 --
--- file: dma_actrl.vhd
---	description: DMA (single- and multiword) mode access controller for ATA controller
--- author : Richard Herveille
--- rev.: 1.0 march 9th, 2001
+--  CVS Log
 --
+--  $Id: atahost_dma_actrl.vhd,v 1.1 2002-02-18 14:32:12 rherveille Exp $
+--
+--  $Date: 2002-02-18 14:32:12 $
+--  $Revision: 1.1 $
+--  $Author: rherveille $
+--  $Locker:  $
+--  $State: Exp $
+--
+-- Change History:
+--               $Log: not supported by cvs2svn $
+--
+--
+
 
 -- Host accesses to DMA ports are 32bit wide. Accesses are made by 2 consecutive 16bit accesses to the ATA
 -- device's DataPort. The MSB HostData(31:16) is transfered first, then the LSB HostData(15:0) is transfered.
@@ -17,7 +63,7 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.std_logic_arith.all;
 
-entity DMA_actrl is
+entity atahost_dma_actrl is
 	generic(
 		TWIDTH : natural := 8;                     -- counter width
 
@@ -70,13 +116,13 @@ entity DMA_actrl is
 		DIOR,
 		DIOW : buffer std_logic 
 	);
-end entity DMA_actrl;
+end entity atahost_dma_actrl;
  
-architecture structural of DMA_actrl is
+architecture structural of atahost_dma_actrl is
 	--
 	-- component declarations
 	--
-	component DMA_tctrl is
+	component atahost_dma_tctrl is
 	generic(
 		TWIDTH : natural := 8;            -- counter width
 
@@ -107,9 +153,9 @@ architecture structural of DMA_actrl is
 		DIOR,                                    -- IOread signal, active high
 		DIOW : buffer std_logic                  -- IOwrite signal, active high
 	);
-	end component DMA_tctrl;
+	end component atahost_dma_tctrl;
 
-	component reg_buf is
+	component atahost_reg_buf is
 	generic (
 		WIDTH : natural := 8
 	);
@@ -124,9 +170,9 @@ architecture structural of DMA_actrl is
 		wr : in std_logic;
 		valid : buffer std_logic
 	);
-	end component reg_buf;
+	end component atahost_reg_buf;
 
-	component fifo is
+	component atahost_fifo is
 	generic(
 		DEPTH : natural := 32;                      -- fifo depth
 		SIZE : natural := 32                        -- data width
@@ -145,7 +191,7 @@ architecture structural of DMA_actrl is
 		D : in std_logic_vector(SIZE -1 downto 0);  -- data input
 		Q : out std_logic_vector(SIZE -1 downto 0)  -- data output
 	);
-	end component fifo;
+	end component atahost_fifo;
 
 	signal Tdone, Tfw : std_logic;
 	signal RxWr, TxRd : std_logic;
@@ -263,15 +309,32 @@ begin
 		-- generate DMA reset signal
 		DMArst <= rst or IDEctrl_rst;
 
-		Txbuf: reg_buf
+		Txbuf: atahost_reg_buf
 			generic map (WIDTH => 32)
-			port map (clk => clk, nReset => nReset, rst => DMArst, D => TxD, Q => TxbufQ, 
-				rd => TxRd, wr => TxWr, valid =>	TxFull	);
+			port map (
+				clk    => clk,
+				nReset => nReset,
+				rst    => DMArst,
+				D      => TxD,
+				Q      => TxbufQ, 
+				rd     => TxRd,
+				wr     => TxWr,
+				valid  =>	TxFull
+			);
 
-		Rxbuf: fifo
+		Rxbuf: atahost_fifo
 			generic map (DEPTH => 7, SIZE => 32)
-			port map (clk => clk, nReset => nReset, rst => DMArst, D => RxbufD, Q => RxQ,
-				rreq => RxRd, wreq => RxWr, empty =>	iRxEmpty, full => RxFull	);
+			port map (
+				clk    => clk,
+				nReset => nReset,
+				rst    => DMArst,
+				D      => RxbufD,
+				Q      => RxQ,
+				rreq   => RxRd,
+				wreq   => RxWr,
+				empty  =>	iRxEmpty,
+				full   => RxFull
+			);
 
 		RxEmpty <= iRxEmpty; -- avoid 'cannot associate OUT port with BUFFER port' error
 
@@ -281,7 +344,7 @@ begin
 		RxRd <= sel and not we and not RxEmpty;
 		TxWr <= sel and     we and not TxFull;
 
-		ack <= RxRd or TxWr; -- DMA buffer access acknowledge
+		ack  <= RxRd or TxWr; -- DMA buffer access acknowledge
 	end block gen_DMAbuf;
 
 	--
@@ -290,6 +353,7 @@ begin
 	gen_DMA_req: block
 		signal hgo : std_logic;
 		signal iDMA_req : std_logic;
+		signal request : std_logic;
 	begin
 		-- generate hold-go
 		gen_hgo : process(clk, nReset)
@@ -305,11 +369,9 @@ begin
 			end if;
 		end process gen_hgo;
 
+		request <= (DMActrl_dir and DMARQ and not TxFull and not hgo) or not RxEmpty;
 		process(clk, nReset)
-			variable request : std_logic;
 		begin
-			request := (DMActrl_dir and DMARQ and not TxFull and not hgo) or not RxEmpty;
-
 			if (nReset = '0') then
 				iDMA_req <= '0';
 			elsif (clk'event and clk = '1') then
@@ -338,14 +400,14 @@ begin
 		gen_igo : process(clk, nReset)
 		begin
 			if (nReset = '0') then
-				igo <= '0';
+				igo  <= '0';
 				dTfw <= '0';
 			elsif (clk'event and clk = '1') then
 				if (rst = '1') then
-					igo <= '0';
+					igo  <= '0';
 					dTfw <= '0';
 				else
-					igo <= go or (not Tfw and dTfw);
+					igo  <= go or (not Tfw and dTfw);
 					dTfw <= Tfw;
 				end if;
 			end if;
@@ -372,11 +434,27 @@ begin
 		--
 		-- hookup timing controller
 		--
-		DMA_timing_ctrl: DMA_tctrl 
-			generic map (TWIDTH => TWIDTH, 
-				DMA_mode0_Tm => DMA_mode0_Tm, DMA_mode0_Td => DMA_mode0_Td, DMA_mode0_Teoc => DMA_mode0_Teoc)
-			port map (clk => clk, nReset => nReset, rst => rst, Tm => Tm, Td => Td, Teoc => Teoc, 
-				go => igo, we => DMActrl_dir, done => Tdone, dstrb => dstrb, DIOR => dior, DIOW => diow);
+		DMA_timing_ctrl: atahost_dma_tctrl 
+			generic map (
+				TWIDTH => TWIDTH, 
+				DMA_mode0_Tm   => DMA_mode0_Tm,
+				DMA_mode0_Td   => DMA_mode0_Td,
+				DMA_mode0_Teoc => DMA_mode0_Teoc
+			)
+			port map (
+				clk    => clk,
+				nReset => nReset,
+				rst    => rst,
+				Tm     => Tm,
+				Td     => Td,
+				Teoc   => Teoc, 
+				go     => igo,
+				we     => DMActrl_dir,
+				done   => Tdone,
+				dstrb  => dstrb,
+				DIOR   => dior,
+				DIOW   => diow
+			);
 
 		done <= Tdone and not Tfw;             -- done transfering last word
 		rd_dstrb <= dstrb and not DMActrl_dir; -- read data strobe
@@ -384,7 +462,4 @@ begin
 	end block DMA_timing_ctrl;
 		
 end architecture structural;
-
-
-
 
